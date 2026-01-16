@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mentoring Bharat - Global IIT-IIM Alumni Support Group</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1e3a8a', // Deep Blue
+                        secondary: '#3b82f6', // Bright Blue
+                        accent: '#f59e0b', // Amber
+                        dark: '#0f172a',
+                        light: '#f8fafc',
+                        // Indian Flag Colors
+                        saffron: '#FF9933',
+                        indiaGreen: '#138808',
+                        chakraBlue: '#000080',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                    },
+                    animation: {
+                        'spin-slow': 'spin 20s linear infinite',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom Utilities */
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        .hero-flag-bg {
+            background: linear-gradient(135deg, rgba(255, 153, 51, 0.15) 0%, rgba(255, 255, 255, 0.9) 45%, rgba(255, 255, 255, 0.9) 55%, rgba(19, 136, 8, 0.15) 100%);
+        }
+
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 1s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Sidebar Transition */
+        .sidebar-overlay {
+            transition: opacity 0.3s ease-in-out, visibility 0.3s;
+        }
+        .sidebar-panel {
+            transition: transform 0.3s ease-in-out;
+            position: relative;
+            overflow: hidden;
+        }
+        .rotate-chevron {
+            transform: rotate(180deg);
+        }
+        /* Sidebar watermark with logo */
+        .sidebar-panel::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 50% 35%, rgba(30, 58, 138, 0.08), transparent 55%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        .sidebar-panel::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: url('logo.png') center 32% / 180px no-repeat;
+            opacity: 0.12;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .sidebar-panel > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Modern base typography */
+        :root {
+            font-family: 'Inter', sans-serif;
+        }
+        body {
+            font-size: 15px;
+            line-height: 1.65;
+        }
+        @media (min-width: 768px) {
+            body { font-size: 16px; }
+        }
+    </style>
+</head>
+<body class="font-sans text-slate-700 bg-slate-50 antialiased selection:bg-saffron selection:text-white relative text-[15px] md:text-[16px] leading-relaxed">
+
+    <div id="sidebar-overlay" class="fixed inset-0 bg-slate-900/50 z-[60] opacity-0 invisible sidebar-overlay backdrop-blur-sm" onclick="toggleSidebar()"></div>
+    
+    <!-- ROTATING ASHOKA CHAKRA BACKGROUND (Fixed Position) -->
+    <!-- Changed z-0 to z-[40] to ensure it floats above the white backgrounds of sections but below nav -->
+    <div class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] opacity-[0.05] pointer-events-none z-[40] animate-spin-slow">
+        <!-- Exact 24-spoke Ashoka Chakra SVG -->
+        <svg viewBox="0 0 100 100" fill="none" stroke="#000080">
+            <!-- Outer Rim -->
+            <circle cx="50" cy="50" r="48" stroke-width="2" />
+            <!-- Center Hub -->
+            <circle cx="50" cy="50" r="6" fill="#000080" />
+            <!-- 24 Spokes (12 lines crossing center) -->
+            <g stroke-width="1.5" stroke-linecap="round">
+                <line x1="50" y1="4" x2="50" y2="96" transform="rotate(0 50 50)" />
+                <line x1="50" y1="4" x2="50" y2="96" transform="rotate(15 50 50)" />
+                <line x1="50" y1="4" x2="50" y2="96" transform="rotate(30 50 50)" />
+                <line x1="50" y1="4" x2="50" y2="96" transform="rotate(45 50 50)" />
+                <line x1="50" y1="4" x2="50" y2="96" transform="rotate(60 50 50)" />
+                <line x1="50" y1="4" x2="50" y2="96" transform="rotate(75 50 50)" />
+                <line x1="50" y1="4" x2="50" y2="96" transform="rotate(90 50 50)" />
+                <line x1="50" y1="4" x2="50" y2="96" transform="rotate(105 50 50)" />
+                <line x1="50" y1="4" x2="50" y2="96" transform="rotate(120 50 50)" />
+                <line x1="50" y1="4" x2="50" y2="96" transform="rotate(135 50 50)" />
+                <line x1="50" y1="4" x2="50" y2="96" transform="rotate(150 50 50)" />
+                <line x1="50" y1="4" x2="50" y2="96" transform="rotate(165 50 50)" />
+            </g>
+        </svg>
+    </div>
+
+    <aside id="sidebar-panel" class="fixed top-0 left-0 h-full w-80 bg-white z-[70] shadow-2xl transform -translate-x-full sidebar-panel overflow-y-auto">
+        <div class="p-6">
+            <div class="flex items-center justify-between mb-8">
+                <span class="font-serif font-bold text-xl text-slate-800">Menu</span>
+                <button onclick="toggleSidebar()" class="p-2 hover:bg-slate-100 rounded-full transition-colors">
+                    <i data-lucide="x" class="w-6 h-6 text-slate-500"></i>
+                </button>
+            </div>
+
+            <div class="space-y-2">
+                <a href="mentor.html" class="block px-4 py-3 text-slate-700 hover:bg-orange-50 hover:text-saffron rounded-lg font-medium transition-colors">
+                    About Mentor
+                </a>
+
+                <a href="mentoring-ay-2023-2024.html" class="block px-4 py-3 text-slate-700 hover:bg-orange-50 hover:text-saffron rounded-lg font-medium transition-colors">
+                    Mentoring AY 2023-2024
+                </a>
+
+                <div>
+                    <button onclick="toggleDropdown('menu-2425', this)" class="w-full flex items-center justify-between px-4 py-3 text-slate-700 hover:bg-orange-50 hover:text-saffron rounded-lg font-medium transition-colors group">
+                        <span>Mentoring AY 2024-2025</span>
+                        <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 group-hover:text-saffron transition-transform duration-200"></i>
+                    </button>
+                    <div id="menu-2425" class="hidden pl-4 space-y-1 mt-1">
+                        <a href="#" class="block px-4 py-2 text-sm text-slate-600 hover:text-chakraBlue">Schedule</a>
+                        <a href="#" class="block px-4 py-2 text-sm text-slate-600 hover:text-chakraBlue">Mentors List</a>
+                    </div>
+                </div>
+
+                <div>
+                    <button onclick="toggleDropdown('menu-2526', this)" class="w-full flex items-center justify-between px-4 py-3 text-slate-700 hover:bg-orange-50 hover:text-saffron rounded-lg font-medium transition-colors group">
+                        <span>Mentoring AY 2025-2026</span>
+                        <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 group-hover:text-saffron transition-transform duration-200"></i>
+                    </button>
+                    <div id="menu-2526" class="hidden pl-4 space-y-1 mt-1">
+                        <a href="#" class="block px-4 py-2 text-sm text-slate-600 hover:text-chakraBlue">Upcoming Events</a>
+                        <a href="#" class="block px-4 py-2 text-sm text-slate-600 hover:text-chakraBlue">Registration</a>
+                    </div>
+                </div>
+
+                <a href="alumnireg.html" class="block px-4 py-3 text-slate-700 hover:bg-orange-50 hover:text-saffron rounded-lg font-medium transition-colors">
+                    Register as Alumni
+                </a>
+
+                <a href="media.html" class="block px-4 py-3 text-slate-700 hover:bg-orange-50 hover:text-saffron rounded-lg font-medium transition-colors">
+                    Media and Allies
+                </a>
+
+                    <a href="blog.html" class="block px-4 py-3 text-slate-700 hover:bg-orange-50 hover:text-saffron rounded-lg font-medium transition-colors">
+                        Blog
+                    </a>
+            </div>
+        </div>
+        
+        <div class="absolute bottom-0 left-0 w-full p-6 border-t border-slate-100 bg-slate-50">
+            <div class="flex items-center gap-3">
+                <img src="logo.png" alt="Mentoring Bharat" class="w-10 h-10 object-contain bg-white rounded-md border border-slate-200 p-1 shadow-sm">
+                <div>
+                    <p class="text-sm font-bold text-slate-900">Mentoring Bharat</p>
+                    <p class="text-xs text-slate-500">Alumni Support Group</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <nav class="fixed w-full z-50 glass-nav transition-all duration-300" id="navbar">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                
+                <div class="flex items-center gap-3">
+                    <div class="flex-shrink-0 flex items-center gap-2">
+                        <img src="logo.png" alt="Mentoring Bharat" class="w-10 h-10 object-contain drop-shadow-sm bg-white rounded-md border border-slate-200 p-1">
+                        <span class="font-serif font-semibold text-base sm:text-xl text-slate-800 tracking-tight leading-tight">Mentoring Bharat</span>
+                    </div>
+                </div>
+
+                <!-- DESKTOP MENU -->
+                <div class="hidden md:flex space-x-6 items-center">
+                    <a href="mentor.html" class="text-sm font-medium text-slate-600 hover:text-saffron transition-colors">About</a>
+                    <a href="mentoring-ay-2023-2024.html" class="text-sm font-medium text-slate-600 hover:text-saffron transition-colors">Mentoring</a>
+                    <a href="alumnireg.html" class="text-sm font-medium text-slate-600 hover:text-saffron transition-colors">Registration</a>
+                    <a href="media.html" class="text-sm font-medium text-slate-600 hover:text-saffron transition-colors">Media & Allies</a>
+                    <a href="blog.html" class="text-sm font-medium text-slate-600 hover:text-saffron transition-colors">Blog</a>
+                </div>
+
+                <div class="md:hidden flex items-center">
+                    <button id="mobile-menu-btn" class="text-slate-600 hover:text-chakraBlue focus:outline-none">
+                        <i data-lucide="more-vertical" class="w-6 h-6"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MOBILE MENU -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-100 absolute w-full shadow-xl">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="mentor.html" class="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:bg-orange-50 hover:text-saffron">About</a>
+                <a href="mentoring-ay-2023-2024.html" class="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:bg-orange-50 hover:text-saffron">Mentoring</a>
+                <a href="alumnireg.html" class="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:bg-orange-50 hover:text-saffron">Registration</a>
+                <a href="media.html" class="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:bg-orange-50 hover:text-saffron">Media & Allies</a>
+                <a href="blog.html" class="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:bg-orange-50 hover:text-saffron">Blog</a>
+            </div>
+        </div>
+    </nav>
+
+    <header class="relative pt-32 pb-24 overflow-hidden z-10">
+        <div class="absolute inset-0 bg-gradient-to-br from-saffron via-white to-indiaGreen opacity-90"></div>
+        <div class="absolute inset-0 bg-white/30 backdrop-blur-[2px]"></div>
+
+        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center text-center z-10">
+            <span class="inline-block py-1.5 px-4 rounded-full bg-chakraBlue/5 border border-chakraBlue/10 text-chakraBlue text-xs font-bold tracking-wider uppercase mb-6 animate-fade-in">
+                Global IIT-IIM Alumni Support Group
+            </span>
+            <h1 class="text-4xl md:text-6xl lg:text-7xl font-serif font-bold leading-tight mb-6 animate-fade-in text-slate-900" style="animation-delay: 0.1s">
+                Empowering the Next Generation of <br/>
+                <span class="text-chakraBlue">Indian Leaders</span>
+            </h1>
+            <p class="text-lg md:text-xl text-slate-700 max-w-2xl mb-10 animate-fade-in font-medium" style="animation-delay: 0.2s">
+                A professional networking platform for marginalized communities from premier institutes. Bridging the gap through mentorship, advocacy, and community support.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 animate-fade-in" style="animation-delay: 0.3s">
+                <a href="mentor.html" class="px-8 py-3.5 rounded-full bg-chakraBlue text-white font-semibold hover:bg-blue-900 transition-all shadow-lg hover:shadow-xl hover:-translate-y-1">
+                    Learn More
+                </a>
+                <a href="#intervention" class="px-8 py-3.5 rounded-full bg-white border border-chakraBlue/20 text-chakraBlue font-semibold hover:bg-blue-50 transition-all shadow-sm hover:shadow-md">
+                    Our Impact
+                </a>
+            </div>
+        </div>
+
+        <div class="relative max-w-5xl mx-auto mt-16 px-4 z-10">
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-6 bg-white/80 backdrop-blur-md rounded-2xl p-6 border border-white/40 shadow-xl text-center">
+                <div class="p-2">
+                    <div class="text-3xl md:text-4xl font-bold text-chakraBlue mb-1">1,000+</div>
+                    <div class="text-sm text-slate-600 uppercase tracking-wide font-medium">Alumni Network</div>
+                </div>
+                <div class="p-2 border-l border-slate-200">
+                    <div class="text-3xl md:text-4xl font-bold text-chakraBlue mb-1">1,000+</div>
+                    <div class="text-sm text-slate-600 uppercase tracking-wide font-medium">Students Mentored</div>
+                </div>
+                <div class="col-span-2 md:col-span-1 p-2 md:border-l border-slate-200">
+                    <div class="text-3xl md:text-4xl font-bold text-chakraBlue mb-1">2023</div>
+                    <div class="text-sm text-slate-600 uppercase tracking-wide font-medium">Initiative Founded</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section id="about" class="py-20 bg-white relative z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                <div class="relative">
+                    <div class="absolute inset-0 bg-gradient-to-tr from-orange-100 to-green-50 rounded-3xl transform -rotate-3 scale-105 -z-10"></div>
+                    <div class="bg-white p-8 md:p-10 rounded-3xl shadow-xl border border-slate-100">
+                        <i data-lucide="quote" class="w-12 h-12 text-saffron/40 mb-6"></i>
+                        <h3 class="text-2xl font-bold text-slate-800 mb-4">The Mentoring Bharat Initiative</h3>
+                        <p class="text-slate-600 mb-6 leading-relaxed">
+                            Started in 2023, following the unfortunate death of IIT Bombay's Darshan Solanki, this initiative extends mentoring support to IIT students coming from marginalized backgrounds.
+                        </p>
+                        <div class="flex items-center gap-4 pt-4 border-t border-slate-100">
+                            <div class="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center text-saffron">
+                                <i data-lucide="users" class="w-6 h-6"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-slate-800">Contextual Mentoring</p>
+                                <p class="text-xs text-slate-500">Provided by alumni who faced similar paths.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <span class="text-saffron font-bold tracking-wide uppercase text-sm">About Us</span>
+                    <h2 class="text-3xl md:text-4xl font-serif font-bold text-slate-900 mt-2 mb-6">Building Bridges for Social Justice</h2>
+                    <p class="text-lg text-slate-600 mb-6 leading-relaxed">
+                        We are a professional networking platform for IIT-IIM-NIT alumni belonging to the Constitutionally marginalized Scheduled Castes and Scheduled Tribes.
+                    </p>
+                    <p class="text-slate-600 mb-8 leading-relaxed">
+                        Inspired by social justice philosophy, our aim is to support fellow alumni's academic, professional, and social progress as a means to pay back and uplift the community as a whole. We are non-political and work on trust, respect, integrity, and the spirit of community service.
+                    </p>
+                    <ul class="space-y-4">
+                        <li class="flex items-start">
+                            <div class="mt-1 mr-3 flex-shrink-0">
+                                <i data-lucide="check-circle-2" class="w-6 h-6 text-indiaGreen"></i>
+                            </div>
+                            <span class="text-slate-700">Advocacy for diversity in higher education</span>
+                        </li>
+                        <li class="flex items-start">
+                            <div class="mt-1 mr-3 flex-shrink-0">
+                                <i data-lucide="check-circle-2" class="w-6 h-6 text-indiaGreen"></i>
+                            </div>
+                            <span class="text-slate-700">Support for academic and professional progress</span>
+                        </li>
+                        <li class="flex items-start">
+                            <div class="mt-1 mr-3 flex-shrink-0">
+                                <i data-lucide="check-circle-2" class="w-6 h-6 text-indiaGreen"></i>
+                            </div>
+                            <span class="text-slate-700">Over 1,000 active alumni members globally</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="intervention" class="py-20 bg-slate-50 relative overflow-hidden z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <span class="text-chakraBlue font-semibold tracking-wide uppercase text-sm">Our Approach</span>
+                <h2 class="text-3xl md:text-4xl font-serif font-bold text-slate-900 mt-2 mb-4">Holistic Intervention Areas</h2>
+                <p class="text-slate-600">We provide comprehensive support systems designed to address the unique challenges faced by students and alumni.</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div class="bg-white rounded-2xl p-8 shadow-sm border border-slate-100 card-hover group">
+                    <div class="w-14 h-14 rounded-xl bg-orange-50 flex items-center justify-center text-saffron mb-6 group-hover:bg-saffron group-hover:text-white transition-colors">
+                        <i data-lucide="heart-handshake" class="w-7 h-7"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-800 mb-3">Emotional Support</h3>
+                    <p class="text-slate-600 text-sm leading-relaxed">
+                        Providing mental health and emotional guidance to students facing challenges, isolation, and discrimination on campus.
+                    </p>
+                </div>
+
+                <div class="bg-white rounded-2xl p-8 shadow-sm border border-slate-100 card-hover group">
+                    <div class="w-14 h-14 rounded-xl bg-blue-50 flex items-center justify-center text-secondary mb-6 group-hover:bg-secondary group-hover:text-white transition-colors">
+                        <i data-lucide="graduation-cap" class="w-7 h-7"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-800 mb-3">Academic Growth</h3>
+                    <p class="text-slate-600 text-sm leading-relaxed">
+                        Supporting students in their academic journey through peer tutoring, resource sharing, and study planning with experienced mentors.
+                    </p>
+                </div>
+
+                <div class="bg-white rounded-2xl p-8 shadow-sm border border-slate-100 card-hover group">
+                    <div class="w-14 h-14 rounded-xl bg-green-50 flex items-center justify-center text-indiaGreen mb-6 group-hover:bg-indiaGreen group-hover:text-white transition-colors">
+                        <i data-lucide="compass" class="w-7 h-7"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-800 mb-3">Career Guidance</h3>
+                    <p class="text-slate-600 text-sm leading-relaxed">
+                        Helping students navigate complex career landscapes, internship opportunities, and professional development paths.
+                    </p>
+                </div>
+
+                <div class="bg-white rounded-2xl p-8 shadow-sm border border-slate-100 card-hover group">
+                    <div class="w-14 h-14 rounded-xl bg-purple-50 flex items-center justify-center text-purple-500 mb-6 group-hover:bg-purple-500 group-hover:text-white transition-colors">
+                        <i data-lucide="briefcase" class="w-7 h-7"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-800 mb-3">Professional Networking</h3>
+                    <p class="text-slate-600 text-sm leading-relaxed">
+                        Creating a strong safety net for alumni to advance their professional careers through referrals and exclusive networking.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="team" class="py-20 bg-white relative z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <span class="text-saffron font-bold tracking-wide uppercase text-sm">Leadership</span>
+                <h2 class="text-3xl md:text-4xl font-serif font-bold text-slate-900 mt-2">Visionary Guidance</h2>
+            </div>
+
+            <div class="max-w-4xl mx-auto">
+                <div class="bg-gradient-to-r from-orange-50 via-white to-green-50 rounded-3xl p-8 md:p-12 shadow-lg border border-slate-100 flex flex-col md:flex-row items-center gap-8 md:gap-12">
+                    <div class="flex-shrink-0">
+                        <div class="w-32 h-32 md:w-40 md:h-40 rounded-full bg-white border-4 border-slate-100 shadow-md flex items-center justify-center overflow-hidden">
+                            <img src="unnamed.jpg" alt="Dheeraj Singh" class="w-full h-full object-cover">
+                        </div>
+                    </div>
+                    <div class="text-center md:text-left flex-1">
+                        <h3 class="text-2xl font-bold text-slate-900 mb-1">Dheeraj Singh</h3>
+                        <p class="text-chakraBlue font-medium mb-4">Founder & Lead Mentor</p>
+                        <div class="inline-flex items-center px-3 py-1 rounded-full bg-blue-50 text-chakraBlue text-xs font-semibold mb-4">
+                            IIT Kanpur & IIM Calcutta Alumni
+                        </div>
+                        <p class="text-slate-600 mb-6 italic">
+                            "The leadership team is dedicated to supporting marginalized students and advocating for diversity and inclusion in higher education institutions across India and globally."
+                        </p>
+                        <a href="https://www.linkedin.com/in/dheeraj-singh-4a42784b/" target="_blank" class="inline-flex items-center text-chakraBlue hover:text-blue-800 font-semibold transition-colors group">
+                            Connect on LinkedIn 
+                            <i data-lucide="arrow-right" class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="media" class="py-20 bg-slate-900 text-white relative z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row justify-between items-end mb-12">
+                <div>
+                    <span class="text-saffron font-semibold tracking-wide uppercase text-sm">Media Coverage</span>
+                    <h2 class="text-3xl md:text-4xl font-serif font-bold mt-2">In The News</h2>
+                </div>
+                <div class="hidden md:block w-32 h-1 bg-gradient-to-r from-saffron via-white to-indiaGreen rounded-full mb-2"></div>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8">
+                <a href="https://www.thehindu.com/news/cities/Delhi/desperate-for-support-scst-students-at-iits-reach-out-to-alumni-group-for-help/article67380445.ece" target="_blank" class="block group">
+                    <div class="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 hover:bg-white/10 transition-all duration-300 h-full">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="px-3 py-1 rounded-full bg-red-500/20 text-red-300 text-xs font-medium">The Hindu</span>
+                            <i data-lucide="external-link" class="w-5 h-5 text-slate-400 group-hover:text-white"></i>
+                        </div>
+                        <h4 class="text-xl font-bold mb-3 group-hover:text-blue-200 transition-colors">
+                            Desperate for support: SC/ST students at IITs reach out to alumni group for help
+                        </h4>
+                        <p class="text-slate-400 text-sm">
+                            Global IIT SC/ST Alumni Support Group provides mentoring, counselling & job search help to marginalized students.
+                        </p>
+                    </div>
+                </a>
+
+                <a href="https://www.hindustantimes.com/opinion/not-just-guidelines-but-a-legal-framework-needed-to-prevent-rampant-caste-bias-on-campus-101693248735503.html" target="_blank" class="block group">
+                    <div class="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 hover:bg-white/10 transition-all duration-300 h-full">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 text-xs font-medium">Hindustan Times</span>
+                            <i data-lucide="external-link" class="w-5 h-5 text-slate-400 group-hover:text-white"></i>
+                        </div>
+                        <h4 class="text-xl font-bold mb-3 group-hover:text-blue-200 transition-colors">
+                            Not just guidelines but a legal framework needed to prevent rampant caste bias
+                        </h4>
+                        <p class="text-slate-400 text-sm">
+                            Opinion piece on addressing diversity deficit in IITs and curbing caste discrimination on campus.
+                        </p>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <footer id="contact" class="bg-slate-950 text-slate-400 py-12 border-t border-slate-900 relative z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-3 gap-8 mb-8">
+                <div>
+                    <div class="flex items-center gap-2 mb-4">
+                        <img src="logo.png" alt="Mentoring Bharat" class="w-10 h-10 object-contain bg-white rounded-md border border-white/10 p-1 shadow-sm">
+                        <span class="font-serif font-semibold text-lg text-white">Mentoring Bharat</span>
+                    </div>
+                    <p class="text-sm leading-relaxed">
+                        Supporting marginalized communities in higher education through mentorship, advocacy, and professional networking.
+                    </p>
+                </div>
+                <div>
+                    <h5 class="text-white font-semibold mb-4">Quick Links</h5>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="mentor.html" class="hover:text-white transition-colors">About Mentor</a></li>
+                        <li><a href="#intervention" class="hover:text-white transition-colors">Our Interventions</a></li>
+                        <li><a href="#team" class="hover:text-white transition-colors">Leadership</a></li>
+                        <li><a href="alumnireg.html" class="hover:text-white transition-colors">Register as Alumni</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h5 class="text-white font-semibold mb-4">Contact</h5>
+                    <p class="text-sm">Have questions or want to get involved?</p>
+                    <a href="mailto:dheeraj012@gmail.com" class="inline-block mt-2 text-saffron hover:text-white transition-colors text-sm font-medium">Get in touch &rarr;</a>
+                </div>
+            </div>
+            <div class="border-t border-slate-900 pt-8 text-center text-sm">
+                <p>&copy; 2024 Mentoring Bharat - Global IIT-IIM Alumni Support Group. All rights reserved.</p>
+                <p class="mt-2 text-xs opacity-70">
+                    Website created by <a href="https://www.linkedin.com/in/nitesh4004/" target="_blank" class="text-saffron hover:text-white transition-colors underline decoration-dotted">Nitesh K</a>
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Initialize Icons
+        lucide.createIcons();
+
+        // ----------------------------------------------------
+        // LEFT SIDEBAR LOGIC
+        // ----------------------------------------------------
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar-panel');
+            const overlay = document.getElementById('sidebar-overlay');
+            const body = document.body;
+            
+            // Toggle classes to slide in/out
+            if (sidebar.classList.contains('-translate-x-full')) {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('opacity-0', 'invisible');
+                body.style.overflow = 'hidden'; // Prevent background scrolling
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('opacity-0', 'invisible');
+                body.style.overflow = '';
+            }
+        }
+
+        // Accordion Logic for Sidebar Dropdowns
+        function toggleDropdown(menuId, buttonElement) {
+            const menu = document.getElementById(menuId);
+            const icon = buttonElement.querySelector('svg');
+            
+            if (menu.classList.contains('hidden')) {
+                menu.classList.remove('hidden');
+                icon.classList.add('rotate-180'); // Rotate chevron
+            } else {
+                menu.classList.add('hidden');
+                icon.classList.remove('rotate-180');
+            }
+        }
+
+        // ----------------------------------------------------
+        // EXISTING LOGIC
+        // ----------------------------------------------------
+
+        // Mobile Menu Toggle (Right side - existing)
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        
+        mobileMenuBtn.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // Close mobile menu when clicking a link
+        document.querySelectorAll('#mobile-menu a').forEach(link => {
+            link.addEventListener('click', () => {
+                mobileMenu.classList.add('hidden');
+            });
+        });
+
+        // Navbar Scroll Effect
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 20) {
+                navbar.classList.add('shadow-md');
+            } else {
+                navbar.classList.remove('shadow-md');
+            }
+        });
+    </script>
+</body>
+</html>
