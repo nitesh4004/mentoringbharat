@@ -131,28 +131,36 @@
     <!-- LEFT SIDEBAR DRAWER -->
     <div id="sidebar-overlay" class="fixed inset-0 bg-slate-900/50 z-[60] opacity-0 invisible sidebar-overlay backdrop-blur-sm" onclick="toggleSidebar()"></div>
     
-    <!-- ROTATING ASHOKA CHAKRA BACKGROUND (Fixed Position) -->
-    <div class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] opacity-[0.05] pointer-events-none z-[40] animate-spin-slow">
-        <!-- Exact 24-spoke Ashoka Chakra SVG -->
-        <svg viewBox="0 0 100 100" fill="none" stroke="#000080">
-            <!-- Outer Rim -->
-            <circle cx="50" cy="50" r="48" stroke-width="2" />
-            <!-- Center Hub -->
-            <circle cx="50" cy="50" r="6" fill="#000080" />
-            <!-- 24 Spokes (12 lines crossing center) -->
-            <g stroke-width="1.5" stroke-linecap="round">
-                <line x1="50" y1="4" x2="50" y2="96" transform="rotate(0 50 50)" />
-                <line x1="50" y1="4" x2="50" y2="96" transform="rotate(15 50 50)" />
-                <line x1="50" y1="4" x2="50" y2="96" transform="rotate(30 50 50)" />
-                <line x1="50" y1="4" x2="50" y2="96" transform="rotate(45 50 50)" />
-                <line x1="50" y1="4" x2="50" y2="96" transform="rotate(60 50 50)" />
-                <line x1="50" y1="4" x2="50" y2="96" transform="rotate(75 50 50)" />
-                <line x1="50" y1="4" x2="50" y2="96" transform="rotate(90 50 50)" />
-                <line x1="50" y1="4" x2="50" y2="96" transform="rotate(105 50 50)" />
-                <line x1="50" y1="4" x2="50" y2="96" transform="rotate(120 50 50)" />
-                <line x1="50" y1="4" x2="50" y2="96" transform="rotate(135 50 50)" />
-                <line x1="50" y1="4" x2="50" y2="96" transform="rotate(150 50 50)" />
-                <line x1="50" y1="4" x2="50" y2="96" transform="rotate(165 50 50)" />
+    <!-- Subtle static Dhamma Chakra (center background, toned down) -->
+    <div aria-hidden="true" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] opacity-[0.04] pointer-events-none z-[30]">
+        <svg viewBox="0 0 100 100" fill="none" stroke="#1e293b">
+            <circle cx="50" cy="50" r="46" stroke-width="1.6" />
+            <circle cx="50" cy="50" r="5" fill="#1e293b" />
+            <g stroke-width="1.2" stroke-linecap="round">
+                <line x1="50" y1="6" x2="50" y2="94" transform="rotate(0 50 50)" />
+                <line x1="50" y1="6" x2="50" y2="94" transform="rotate(15 50 50)" />
+                <line x1="50" y1="6" x2="50" y2="94" transform="rotate(30 50 50)" />
+                <line x1="50" y1="6" x2="50" y2="94" transform="rotate(45 50 50)" />
+                <line x1="50" y1="6" x2="50" y2="94" transform="rotate(60 50 50)" />
+                <line x1="50" y1="6" x2="50" y2="94" transform="rotate(75 50 50)" />
+                <line x1="50" y1="6" x2="50" y2="94" transform="rotate(90 50 50)" />
+                <line x1="50" y1="6" x2="50" y2="94" transform="rotate(105 50 50)" />
+                <line x1="50" y1="6" x2="50" y2="94" transform="rotate(120 50 50)" />
+                <line x1="50" y1="6" x2="50" y2="94" transform="rotate(135 50 50)" />
+                <line x1="50" y1="6" x2="50" y2="94" transform="rotate(150 50 50)" />
+                <line x1="50" y1="6" x2="50" y2="94" transform="rotate(165 50 50)" />
+                <line x1="50" y1="6" x2="50" y2="94" transform="rotate(180 50 50)" />
+                <line x1="50" y1="6" x2="50" y2="94" transform="rotate(195 50 50)" />
+                <line x1="50" y1="6" x2="50" y2="94" transform="rotate(210 50 50)" />
+                <line x1="50" y1="6" x2="50" y2="94" transform="rotate(225 50 50)" />
+                <line x1="50" y1="6" x2="50" y2="94" transform="rotate(240 50 50)" />
+                <line x1="50" y1="6" x2="50" y2="94" transform="rotate(255 50 50)" />
+                <line x1="50" y1="6" x2="50" y2="94" transform="rotate(270 50 50)" />
+                <line x1="50" y1="6" x2="50" y2="94" transform="rotate(285 50 50)" />
+                <line x1="50" y1="6" x2="50" y2="94" transform="rotate(300 50 50)" />
+                <line x1="50" y1="6" x2="50" y2="94" transform="rotate(315 50 50)" />
+                <line x1="50" y1="6" x2="50" y2="94" transform="rotate(330 50 50)" />
+                <line x1="50" y1="6" x2="50" y2="94" transform="rotate(345 50 50)" />
             </g>
         </svg>
     </div>
