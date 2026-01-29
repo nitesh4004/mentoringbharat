@@ -141,7 +141,7 @@
 
         .timeline-line {
             position: absolute;
-            left: 24px;
+            left: 6px;
             top: 24px;
             bottom: 0;
             width: 2px;
@@ -338,7 +338,7 @@
         <div class="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid md:grid-cols-3 gap-12 items-center">
                 <!-- Left Content -->
-                <div class="md:col-span-2 animate-fade-in">
+                <div class="md:col-span-2 animate-fade-in order-last md:order-first">
                     <div
                         class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-chakraBlue text-xs font-bold tracking-wide uppercase mb-6 border border-blue-100">
                         <span class="w-2 h-2 rounded-full bg-chakraBlue"></span>
@@ -394,13 +394,11 @@
                 </div>
 
                 <!-- Right Profile Image -->
-                <div class="relative hidden md:block animate-fade-in" style="animation-delay: 0.2s">
-                    <div
-                        class="absolute inset-0 bg-gradient-to-br from-saffron via-slate-200 to-indiaGreen rounded-3xl transform -rotate-6 scale-105 opacity-40">
-                    </div>
+                <div class="relative block md:block animate-fade-in order-first md:order-last w-64 md:w-80 mx-auto"
+                    style="animation-delay: 0.2s">
                     <!-- Using placeholder image to represent the profile picture, replace with actual URL if available -->
                     <img src="headmentor.jpg" alt="Dheeraj Singh"
-                        class="relative w-full rounded-full shadow-2xl border-4 border-white object-cover aspect-square">
+                        class="relative w-full rounded-full shadow-lg border-4 border-white object-cover aspect-square">
                 </div>
             </div>
         </div>
