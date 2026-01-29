@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Placement Mentoring - Mentoring Bharat</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;1,600&display=swap"
+        rel="stylesheet">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Custom Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1e3a8a', // Deep Blue
+                        secondary: '#3b82f6', // Bright Blue
+                        accent: '#f59e0b', // Amber
+                        dark: '#0f172a',
+                        light: '#f8fafc',
+                        // Indian Flag Colors
+                        saffron: '#FF9933',
+                        indiaGreen: '#138808',
+                        chakraBlue: '#000080',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                    },
+                    animation: {
+                        'spin-slow': 'spin 20s linear infinite',
+                        'fade-in': 'fadeIn 1s ease-out',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom Utilities */
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 1s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Sidebar Transition */
+        .sidebar-overlay {
+            transition: opacity 0.3s ease-in-out, visibility 0.3s;
+        }
+
+        .sidebar-panel {
+            transition: transform 0.3s ease-in-out;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .rotate-chevron {
+            transform: rotate(180deg);
+        }
+
+        /* Sidebar watermark with logo */
+        .sidebar-panel::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 50% 35%, rgba(30, 58, 138, 0.08), transparent 55%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .sidebar-panel::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: url('logo.png') center 32% / 180px no-repeat;
+            opacity: 0.12;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .sidebar-panel>* {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Modern base typography */
+        :root {
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            font-size: 15px;
+            line-height: 1.65;
+        }
+
+        @media (min-width: 768px) {
+            body {
+                font-size: 16px;
+            }
+        }
+
+        /* Footer quick links styling */
+        .footer-quick-links a {
+            color: #c8d4ff;
+            transition: color 0.2s ease;
+        }
+
+        .footer-quick-links a:hover {
+            color: #ffffff;
+        }
+    </style>
+</head>
+
+<body
+    class="font-sans text-slate-700 bg-slate-50 antialiased selection:bg-saffron selection:text-white relative text-[15px] md:text-[16px] leading-relaxed">
+
+    <!-- LEFT SIDEBAR DRAWER -->
+    <div id="sidebar-overlay"
+        class="fixed inset-0 bg-slate-900/50 z-[60] opacity-0 invisible sidebar-overlay backdrop-blur-sm"
+        onclick="toggleSidebar()"></div>
+
+    <!-- Background motif removed -->
+
+    <aside id="sidebar-panel"
+        class="fixed top-0 left-0 h-full w-80 bg-white z-[70] shadow-2xl transform -translate-x-full sidebar-panel overflow-y-auto">
+        <div class="p-6">
+            <!-- Sidebar Header -->
+            <div class="flex items-center justify-between mb-8">
+                <span class="font-serif font-bold text-xl text-slate-800">Menu</span>
+                <button onclick="toggleSidebar()" class="p-2 hover:bg-slate-100 rounded-full transition-colors">
+                    <i data-lucide="x" class="w-6 h-6 text-slate-500"></i>
+                </button>
+            </div>
+
+            <!-- Sidebar Links -->
+            <div class="space-y-2">
+                <a href="index.html"
+                    class="block px-4 py-3 text-slate-700 hover:bg-orange-50 hover:text-saffron rounded-lg font-medium transition-colors">
+                    Home
+                </a>
+
+                <a href="mentor.html"
+                    class="block px-4 py-3 text-slate-700 hover:bg-orange-50 hover:text-saffron rounded-lg font-medium transition-colors">
+                    About Mentor
+                </a>
+
+                <a href="#" onclick="toggleSidebar()"
+                    class="block px-4 py-3 bg-orange-50 text-saffron rounded-lg font-bold transition-colors border-l-4 border-saffron">
+                    Mentoring Program
+                </a>
+
+                <!-- Dropdown 1 -->
+                <div>
+                    <button onclick="toggleDropdown('menu-2425', this)"
+                        class="w-full flex items-center justify-between px-4 py-3 text-slate-700 hover:bg-orange-50 hover:text-saffron rounded-lg font-medium transition-colors group">
+                        <span>Upcoming Mentoring</span>
+                        <i data-lucide="chevron-down"
+                            class="w-4 h-4 text-slate-400 group-hover:text-saffron transition-transform duration-200"></i>
+                    </button>
+                    <div id="menu-2425" class="hidden pl-4 space-y-1 mt-1">
+                        <a href="#" class="block px-4 py-2 text-sm text-slate-600 hover:text-chakraBlue">Schedule</a>
+                        <a href="#" class="block px-4 py-2 text-sm text-slate-600 hover:text-chakraBlue">Mentors
+                            List</a>
+                    </div>
+                </div>
+
+                <!-- Dropdown 2 -->
+                <div>
+                    <button onclick="toggleDropdown('menu-2526', this)"
+                        class="w-full flex items-center justify-between px-4 py-3 text-slate-700 hover:bg-orange-50 hover:text-saffron rounded-lg font-medium transition-colors group">
+                        <span>Future Mentoring</span>
+                        <i data-lucide="chevron-down"
+                            class="w-4 h-4 text-slate-400 group-hover:text-saffron transition-transform duration-200"></i>
+                    </button>
+                    <div id="menu-2526" class="hidden pl-4 space-y-1 mt-1">
+                        <a href="#" class="block px-4 py-2 text-sm text-slate-600 hover:text-chakraBlue">Upcoming
+                            Events</a>
+                        <a href="#"
+                            class="block px-4 py-2 text-sm text-slate-600 hover:text-chakraBlue">Registration</a>
+                    </div>
+                </div>
+
+                <a href="registration.html"
+                    class="block px-4 py-3 text-slate-700 hover:bg-orange-50 hover:text-saffron rounded-lg font-medium transition-colors">
+                    Register as Alumni
+                </a>
+
+                <a href="media.html"
+                    class="block px-4 py-3 text-slate-700 hover:bg-orange-50 hover:text-saffron rounded-lg font-medium transition-colors">
+                    Media and Allies
+                </a>
+
+
+            </div>
+        </div>
+
+        <!-- Sidebar Footer -->
+        <div class="absolute bottom-0 left-0 w-full p-6 border-t border-slate-100 bg-slate-50">
+            <div class="flex items-center gap-3">
+                <img src="logo.png" alt="Mentoring Bharat"
+                    class="w-10 h-10 object-contain bg-white rounded-md border border-slate-200 p-1 shadow-sm">
+                <div>
+                    <p class="text-sm font-bold text-slate-900">Mentoring Bharat</p>
+                    <p class="text-xs text-slate-500">Alumni Support Group</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 glass-nav transition-all duration-300" id="navbar">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+
+                <!-- Left Section: Sidebar Trigger + Logo -->
+                <div class="flex items-center gap-3">
+                    <a href="index.html" class="flex-shrink-0 flex items-center gap-2 group">
+                        <img src="logo.png" alt="Mentoring Bharat"
+                            class="w-10 h-10 object-contain drop-shadow-sm bg-white rounded-md border border-slate-200 p-1">
+                        <span
+                            class="font-serif font-semibold text-base sm:text-xl text-slate-800 tracking-tight leading-tight">Mentoring
+                            Bharat</span>
+                    </a>
+                </div>
+
+                <!-- Desktop Menu -->
+                <div class="hidden md:flex space-x-8 items-center">
+                    <a href="mentor.html"
+                        class="text-sm font-medium text-slate-600 hover:text-saffron transition-colors">About</a>
+                    <a href="mentoring.html"
+                        class="text-sm font-bold text-chakraBlue border-b-2 border-chakraBlue pb-1">Mentoring</a>
+                    <a href="registration.html"
+                        class="text-sm font-medium text-slate-600 hover:text-saffron transition-colors">Registration</a>
+                    <a href="media.html"
+                        class="text-sm font-medium text-slate-600 hover:text-saffron transition-colors">Media &
+                        Allies</a>
+
+                </div>
+
+                <div class="md:hidden flex items-center">
+                    <button id="mobile-menu-btn" class="text-slate-600 hover:text-chakraBlue focus:outline-none">
+                        <i data-lucide="more-vertical" class="w-6 h-6"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MOBILE MENU -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-100 absolute w-full shadow-xl">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="mentor.html"
+                    class="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:bg-orange-50 hover:text-saffron">About</a>
+                <a href="mentoring.html"
+                    class="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:bg-orange-50 hover:text-saffron">Mentoring</a>
+                <a href="registration.html"
+                    class="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:bg-orange-50 hover:text-saffron">Registration</a>
+                <a href="media.html"
+                    class="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:bg-orange-50 hover:text-saffron">Media
+                    & Allies</a>
+
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="relative pt-32 pb-20 overflow-hidden bg-slate-50 z-10">
+        <!-- Tricolor Background Gradient -->
+        <div class="absolute inset-0 bg-gradient-to-br from-saffron via-white to-indiaGreen opacity-[0.08]"></div>
+
+        <!-- Background motif removed -->
+
+        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="max-w-4xl mx-auto text-center">
+                <div
+                    class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-100 text-saffron text-sm font-bold tracking-wide uppercase mb-6 border border-orange-200">
+                    <span class="w-2 h-2 rounded-full bg-saffron"></span>
+                    Impact Report
+                </div>
+                <h1 class="text-4xl md:text-5xl lg:text-6xl font-serif font-bold leading-tight mb-6 text-slate-900">
+                    Mentoring for IIT Campus <br />
+                    <span class="text-chakraBlue">Placements</span>
+                </h1>
+                <!-- Removed Academic Year label per request -->
+                <div class="mt-8 flex justify-center">
+                    <div class="h-1 w-24 bg-gradient-to-r from-saffron via-white to-indiaGreen rounded-full"></div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Purpose & Process -->
+    <section class="py-16 bg-white relative z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-2 gap-12 items-start">
+                <div>
+                    <span class="text-chakraBlue font-semibold tracking-wide uppercase text-sm">Our Mission</span>
+                    <h2 class="text-3xl font-serif font-bold text-slate-900 mt-2 mb-6">Purpose of Mentoring</h2>
+                    <p class="text-slate-600 leading-relaxed mb-8">
+                        Our goal is to support graduating IIT & NIT students through senior alumni mentorship, helping
+                        bridge the gap between academic preparation and industry readiness by providing guidance,
+                        networks, and professional insight.
+                    </p>
+
+                    <div class="grid sm:grid-cols-2 gap-4">
+                        <div class="flex gap-3 p-4 rounded-xl bg-slate-50 border border-slate-100">
+                            <i data-lucide="file-text" class="w-6 h-6 text-saffron flex-shrink-0"></i>
+                            <div>
+                                <span class="block text-sm font-bold text-slate-800">CV Preparation</span>
+                                <span class="text-xs text-slate-500">Review & Personal Questions</span>
+                            </div>
+                        </div>
+                        <div class="flex gap-3 p-4 rounded-xl bg-slate-50 border border-slate-100">
+                            <i data-lucide="users" class="w-6 h-6 text-secondary flex-shrink-0"></i>
+                            <div>
+                                <span class="block text-sm font-bold text-slate-800">Mock Interviews</span>
+                                <span class="text-xs text-slate-500">By Industry Experts</span>
+                            </div>
+                        </div>
+                        <div class="flex gap-3 p-4 rounded-xl bg-slate-50 border border-slate-100">
+                            <i data-lucide="mic" class="w-6 h-6 text-indiaGreen flex-shrink-0"></i>
+                            <div>
+                                <span class="block text-sm font-bold text-slate-800">Soft Skills</span>
+                                <span class="text-xs text-slate-500">Communication & Confidence</span>
+                            </div>
+                        </div>
+                        <div class="flex gap-3 p-4 rounded-xl bg-slate-50 border border-slate-100">
+                            <i data-lucide="briefcase" class="w-6 h-6 text-purple-600 flex-shrink-0"></i>
+                            <div>
+                                <span class="block text-sm font-bold text-slate-800">Job Search</span>
+                                <span class="text-xs text-slate-500">And Salary Negotiation</span>
+                            </div>
+                        </div>
+                        <div class="flex gap-3 p-4 rounded-xl bg-slate-50 border border-slate-100">
+                            <i data-lucide="globe-2" class="w-6 h-6 text-chakraBlue flex-shrink-0"></i>
+                            <div>
+                                <span class="block text-sm font-bold text-slate-800">Networking</span>
+                                <span class="text-xs text-slate-500">Access to Alumni Network</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                    class="bg-gradient-to-br from-slate-900 to-chakraBlue rounded-3xl p-8 text-white shadow-xl relative overflow-hidden">
+                    <div class="relative z-10">
+                        <h3 class="text-2xl font-bold mb-2 text-white">Achievements</h3>
+                        <p class="text-blue-200 mb-8 text-sm">Mentoring outcomes</p>
+
+                        <div class="flex items-end gap-2 mb-2">
+                            <span class="text-6xl font-bold text-saffron">300+</span>
+                        </div>
+                        <p class="text-lg font-medium mb-8 border-b border-white/10 pb-8">
+                            IIT and NIT students supported through mentoring who secured placements through campus and
+                            off campus routes
+                        </p>
+
+                        <div class="flex items-start gap-4">
+                            <div class="p-3 bg-white/10 rounded-lg">
+                                <i data-lucide="check-circle" class="w-6 h-6 text-green-400"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm text-blue-100 leading-relaxed">
+                                    Special focus on <span class="text-white font-bold">unplaced IITians</span> who
+                                    recently graduated, ensuring they are now well placed in the industry.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Decorative BG -->
+                    <div class="absolute right-0 bottom-0 opacity-10 transform translate-x-1/4 translate-y-1/4">
+                        <svg width="300" height="300" viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Placements List Section -->
+    <section class="py-16 bg-slate-50 border-t border-slate-200 relative z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <span class="text-saffron font-bold tracking-wide uppercase text-sm">Success Metrics</span>
+                <h2 class="text-3xl font-serif font-bold text-slate-900 mt-2">Career Outcomes</h2>
+                <p class="text-slate-500 mt-2">Selected organisations where mentees from recent cohorts have secured
+                    roles</p>
+            </div>
+
+            <!-- Company Cloud Grid -->
+            <div class="bg-white rounded-3xl p-8 shadow-sm border border-slate-200">
+                <div class="flex flex-wrap gap-3 justify-center text-sm font-medium text-slate-600"
+                    id="company-container">
+                    <!-- Populated by JS -->
+                </div>
+
+                <div class="mt-8 text-center border-t border-slate-100 pt-6">
+                    <p class="text-xs text-slate-400">
+                        *Includes multiple placements in top firms like Reliance, BPCL, Air India, and NPCI.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="py-20 bg-white relative z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="mb-12">
+                <h2 class="text-3xl font-serif font-bold text-slate-900">Success Stories</h2>
+                <p class="text-slate-500">Voices from the Graduating Batch</p>
+                <div class="w-20 h-1 bg-chakraBlue mt-4 rounded-full"></div>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6" id="testimonials-grid">
+                <!-- Content Populated by JS for better management of large text -->
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-slate-950 text-slate-400 py-12 border-t border-slate-900 relative z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-3 gap-8 mb-8">
+                <div>
+                    <div class="flex items-center gap-2 mb-4">
+                        <img src="logo.png" alt="Mentoring Bharat"
+                            class="w-10 h-10 object-contain bg-white rounded-md border border-white/10 p-1 shadow-sm">
+                        <span class="font-serif font-semibold text-lg text-white">Mentoring Bharat</span>
+                    </div>
+                    <p class="text-sm leading-relaxed">
+                        Supporting marginalised communities in higher education through mentorship, peer support, and
+                        professional networking.
+                    </p>
+                </div>
+                <div>
+                    <h5 class="text-white font-semibold mb-4">Quick Links</h5>
+                    <ul class="space-y-2 text-sm footer-quick-links">
+                        <li><a href="index.html" class="hover:text-white transition-colors">Home</a></li>
+                        <li><a href="mentor.html" class="hover:text-white transition-colors">About Mentor</a></li>
+                        <li><a href="mentoring.html" class="hover:text-white transition-colors">Mentoring
+                                Program</a></li>
+                        <li><a href="registration.html" class="hover:text-white transition-colors">Registration</a></li>
+                        <li><a href="media.html" class="hover:text-white transition-colors">Media & Allies</a></li>
+
+                    </ul>
+                </div>
+                <div>
+                    <h5 class="text-white font-semibold mb-4">Contact</h5>
+                    <p class="text-sm">Have questions or want to get involved?</p>
+                    <a href="mailto:mentoringbharat@gmail.com"
+                        class="inline-block mt-2 text-saffron hover:text-white transition-colors text-sm font-medium">Get
+                        in touch &rarr;</a>
+                    <p class="text-sm text-slate-400 mt-2">mentoringbharat@gmail.com</p>
+                </div>
+            </div>
+            <div class="border-t border-slate-900 pt-8 text-center text-sm">
+                <p>&copy; Mentoring Bharat - Global IIT-IIM Alumni Support Group. All rights reserved.</p>
+                <p class="mt-2 text-xs opacity-70">
+                    Website crafted by <a href="https://www.linkedin.com/in/nitesh4004/" target="_blank"
+                        class="text-saffron hover:text-white transition-colors underline decoration-dotted">Nitesh K
+                        [IITG]</a>
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script>
+        // Initialize Icons
+        lucide.createIcons();
+
+        // ----------------------------------------------------
+        // COMPANY DATA POPULATION
+        // ----------------------------------------------------
+        // Full list from the user prompt
+        const companyList = [
+            "Microsoft", "Pine Labs", "Accenture Japan", "EY", "Vedanta", "Bajaj Auto", "FICO", "Media.net",
+            "HPCL", "Axxela", "Air India Data", "Edgeverve", "Axis Bank", "Taiwan Semiconductor", "Air India SDE",
+            "Amadeus", "EXL", "MIPS", "Monarch Tractor SDE", "BPCL", "IQVIA", "Hyperbots System", "Fujitsu",
+            "CAMS", "Reliance", "NPCI", "ClearTax", "Capgrid", "Tata Elxsi", "Xion", "Asper.ai", "Jindal Oman",
+            "Fuji Electric", "C-DOT", "Mercedes Benz", "L&T", "E-ring", "Dolat Capital", "Greaves Cotton", "Indkal",
+            "TVS Motors", "Jindal Stainless", "Petronet", "SMFG", "Deloitte", "Uni Tri Tech", "Accenture",
+            "Merilytics", "Motherson Group", "Apporchid", "IOCL", "Straive", "HCL", "Ola", "Jindal Shadeed Oman",
+            "Tredence Analytics", "K12 Technology", "Digit Insurance", "Angel Broking", "Exide Energy",
+            "Cubastion Consulting", "Tata Autocomp", "Narayana", "TCS Prime", "KPIT Technologies", "AgroNxt",
+            "CSRL", "Sandvik", "ANZ Bank", "CDAC", "SRF", "Netradyne", "GAIL", "Meril Life Sciences", "NLC",
+            "Techfour", "Arthmate", "Timble", "LetsBloom Pte", "ASEC", "Indxx", "Reliance Insurance"
+        ];
+
+        // Ensure duplications (like multiple Reliance/BPCL/NPCI) are shown if desired, 
+        // or just show unique. For a "Cloud", unique is usually better to avoid clutter, 
+        // but showing counts could be cool. Let's do unique sorted for cleanliness.
+        const uniqueCompanies = [...new Set(companyList)].sort();
+
+        const container = document.getElementById('company-container');
+        container.innerHTML = uniqueCompanies.map(company =>
+            `<span class="px-4 py-2 bg-slate-50 hover:bg-white hover:shadow-md transition-all rounded-full border border-slate-200 text-slate-700 cursor-default">${company}</span>`
+        ).join('');
+
+
+        // ----------------------------------------------------
+        // TESTIMONIALS DATA
+        // ----------------------------------------------------
+        const testimonials = [
+            {
+                text: "Sir, I am one of the students from your mentorship program. I have followed your instructions from start... Yesterday I got placed in Digit insurance as a graduate engineer trainee.",
+                student: "IIT Guwahati Student",
+                company: "Digit Insurance",
+                color: "blue"
+            },
+            {
+                text: "Sir, I got selected at NLC India Ltd through GATE... your tips and podcasts helped me a lot to perform very well in the interview. Thank u so much for all ur support.",
+                student: "IIT Guwahati Student",
+                company: "NLC India",
+                color: "orange"
+            },
+            {
+                text: "I am really happy to tell you that I have just got placed at AgroNxt... I am really grateful to you for your initiation and efforts to give us such a detailed and effective guidance.",
+                student: "IIT Kanpur Student",
+                company: "AgroNxt",
+                color: "green"
+            },
+            {
+                text: "I wanted to inform you that I got an offer from Tredence Analytics for the role of data analyst. Thank you very much for the guidance and support.",
+                student: "IIT Madras Student",
+                company: "Tredence Analytics",
+                color: "purple"
+            },
+            {
+                text: "Sir, I got selected in BPCL. Thank you so much sir. Your Mentoring helped me a lot. I was hopeless due to phase 1 but your guidance helped to reach this goal.",
+                student: "IIT Bombay Student",
+                company: "BPCL",
+                color: "saffron"
+            },
+            {
+                text: "Sir, I'm happy to inform you that I got placed at Deloitte as a Consultant. Your efforts are much much appreciated. I would really like to be a helping hand.",
+                student: "IIT Madras Student",
+                company: "Deloitte",
+                color: "dark"
+            },
+            {
+                text: "I'm thrilled to share that I've secured a job at Accenture India for an Advance Application Engineering role. Your support made a significant difference.",
+                student: "IIT Patna Student",
+                company: "Accenture India",
+                color: "secondary"
+            },
+            {
+                text: "Thank you Sir for mentoring us and enlightening us... I got placed in SMFG.",
+                student: "IIT Kanpur Student",
+                company: "SMFG",
+                color: "orange"
+            },
+            {
+                text: "Sir, I got placed in Tata Autocomp... Spotify podcast was really helpful in the interview. Though my CTC was low but I think it’s a good start.",
+                student: "IIT Bhubaneswar Student",
+                company: "Tata Autocomp",
+                color: "blue"
+            },
+            {
+                text: "Sir, I got selected for C-DOT as a CSE research engineer profile... practiced mock interviews after 5 failure interviews i finally placed.",
+                student: "IIT Guwahati Student",
+                company: "C-DOT",
+                color: "green"
+            },
+            {
+                text: "Sir, I got offer from Reliance. Thank you so much sir... interviewers told me excellent whatever you delivered it's really good.",
+                student: "IIT BHU Student",
+                company: "Reliance",
+                color: "primary"
+            },
+            {
+                text: "I got placed in SWE role at LetsBloom Pte. Ltd... a full of inspiration to keep pushing myself even at day 8 after loosing all the hopes.",
+                student: "IIT Kharagpur Student",
+                company: "LetsBloom Pte",
+                color: "purple"
+            },
+            {
+                text: "Sir, I finally got placed in Pine Labs today... This mentorship programme helped me a lot to improve my communication skills.",
+                student: "IIT Bombay Student",
+                company: "Pine Labs",
+                color: "saffron"
+            },
+            {
+                text: "Sir, I got placed in Fuji Electric. Thanks for rebuking me for complaining too much😅, and also for your valuable feedbacks.",
+                student: "IIT Madras Student",
+                company: "Fuji Electric",
+                color: "red"
+            },
+            {
+                text: "Sir, I got placed in Bajaj Auto. Your answers to the HR questions and tips helped me a lot. Thank you very much sir.",
+                student: "IIT Guwahati Student",
+                company: "Bajaj Auto",
+                color: "blue"
+            },
+            {
+                text: "Thanks sir I got an offer In NPCI. Your contribution can't justified in words.",
+                student: "IIT Delhi Student",
+                company: "NPCI",
+                color: "green"
+            },
+            {
+                text: "Sir I unexpectedly got an interview the next day after we talked and got an offer as Software Developer in IQVIA! I was about to give up.",
+                student: "IIT Madras Student",
+                company: "IQVIA",
+                color: "purple"
+            },
+            {
+                text: "Sir, Thank you so much for your selfless efforts... I just got placed in AirIndia sde",
+                student: "IIT Delhi Student",
+                company: "Air India",
+                color: "orange"
+            },
+            {
+                text: "Thank you so so so much for your help. I got placed in Accenture Japan.",
+                student: "IIT Kanpur Student",
+                company: "Accenture Japan",
+                color: "red"
+            },
+            {
+                text: "I have been recruited by Microsoft India in profile of software Engineer. Thanks a lot for your guidance!!",
+                student: "IIT Kanpur Student",
+                company: "Microsoft",
+                color: "secondary"
+            }
+        ];
+
+        // Function to get color class based on config
+        const getColorClass = (color) => {
+            const map = {
+                blue: 'from-blue-100 to-blue-200 text-blue-700',
+                orange: 'from-orange-100 to-orange-200 text-orange-700',
+                green: 'from-green-100 to-green-200 text-green-700',
+                purple: 'from-purple-100 to-purple-200 text-purple-700',
+                saffron: 'from-orange-200 to-orange-300 text-orange-800', // Saffron sim
+                secondary: 'from-blue-200 to-blue-300 text-blue-800',
+                red: 'from-red-100 to-red-200 text-red-700',
+                primary: 'from-indigo-100 to-indigo-200 text-indigo-700',
+                dark: 'from-gray-200 to-gray-300 text-gray-800'
+            };
+            return map[color] || map.blue;
+        };
+
+        const testimonialContainer = document.getElementById('testimonials-grid');
+        testimonialContainer.innerHTML = testimonials.map(t => `
+            <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100 card-hover relative group flex flex-col h-full">
+                <i data-lucide="quote" class="w-8 h-8 text-saffron/20 absolute top-6 right-6 group-hover:text-saffron/40 transition-colors"></i>
+                <div class="mb-6 flex-grow">
+                    <p class="text-slate-600 text-sm italic leading-relaxed">"${t.text}"</p>
+                </div>
+                <div class="flex items-center gap-3 mt-auto pt-4 border-t border-slate-100/50">
+                    <div class="w-10 h-10 bg-gradient-to-br ${getColorClass(t.color)} rounded-full flex items-center justify-center font-bold text-xs shadow-sm">
+                        ${t.student.split(' ')[1].substring(0, 2)}
+                    </div>
+                    <div>
+                        <p class="text-sm font-bold text-slate-800">${t.company}</p>
+                        <p class="text-xs text-slate-500">${t.student}</p>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+
+
+        // ----------------------------------------------------
+        // SIDEBAR LOGIC
+        // ----------------------------------------------------
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar-panel');
+            const overlay = document.getElementById('sidebar-overlay');
+            const body = document.body;
+
+            if (sidebar.classList.contains('-translate-x-full')) {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('opacity-0', 'invisible');
+                body.style.overflow = 'hidden';
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('opacity-0', 'invisible');
+                body.style.overflow = '';
+            }
+        }
+
+        function toggleDropdown(menuId, buttonElement) {
+            const menu = document.getElementById(menuId);
+            const icon = buttonElement.querySelector('svg');
+
+            if (menu.classList.contains('hidden')) {
+                menu.classList.remove('hidden');
+                icon.classList.add('rotate-180');
+            } else {
+                menu.classList.add('hidden');
+                icon.classList.remove('rotate-180');
+            }
+        }
+
+        // Mobile Menu Toggle
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        if (mobileMenuBtn) {
+            mobileMenuBtn.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+        }
+
+        // Navbar Scroll Effect
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 20) {
+                navbar.classList.add('shadow-md');
+            } else {
+                navbar.classList.remove('shadow-md');
+            }
+        });
+    </script>
+</body>
+
+</html>
