@@ -1,0 +1,2034 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KaMaL - KML, GPX, CSV & GeoJSON Tool</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css"/>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <!-- Geometry Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+    <script src="https://unpkg.com/@mapbox/togeojson/togeojson.js"></script>
+    <script src="https://unpkg.com/tokml@0.4.0/tokml.js"></script>
+    <!-- Added TOGPX for GPX Export -->
+    <script src="https://unpkg.com/togpx@0.5.4/togpx.js"></script>
+
+    <style>
+        /* Modern Reset & Fonts */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        :root {
+            /* ADJUSTED: Reduced width for 75% zoom feel */
+            --sidebar-width: 270px; 
+            --toolbar-scale: 1.25; /* DOUBLED SIZE DEFAULT */
+        }
+
+        body {
+            display: flex;
+            height: 100vh;
+            background-color: #0f172a; 
+            overflow: hidden;
+            font-size: 12px; /* Global font size reduction */
+        }
+
+        /* --- Modern Glass Sidebar --- */
+        .sidebar {
+            width: var(--sidebar-width);
+            min-width: 220px; 
+            max-width: 80vw;
+            background-color: rgba(30, 41, 59, 0.95); 
+            color: #f1f5f9;
+            display: flex;
+            flex-direction: column;
+            padding: 16px; /* Reduced from 24px */
+            box-shadow: 4px 0 24px rgba(0,0,0,0.25);
+            z-index: 2000;
+            transition: margin-left 0.3s ease; 
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(255,255,255,0.05);
+            position: relative;
+            margin-left: 0;
+            flex-shrink: 0;
+        }
+
+        .sidebar.collapsed {
+            margin-left: calc(var(--sidebar-width) * -1);
+        }
+
+        /* Resizer Handle */
+        .sidebar-resizer {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 4px;
+            height: 100%;
+            cursor: col-resize;
+            background: transparent;
+            z-index: 2001;
+            transition: background 0.2s;
+        }
+        .sidebar-resizer:hover, .sidebar-resizer.resizing {
+            background: #00d2d3;
+        }
+
+        /* Toggle Button */
+        .sidebar-toggle {
+            position: absolute;
+            right: -32px; /* Adjusted */
+            bottom: 15px; 
+            width: 32px; /* Smaller */
+            height: 32px; /* Smaller */
+            background-color: #00d2d3;
+            color: #0f172a;
+            border-radius: 0 6px 6px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 2px 0 8px rgba(0,0,0,0.2);
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+        .sidebar-toggle:hover {
+            width: 38px;
+            background-color: #22d3ee;
+        }
+
+        .logo {
+            font-size: 20px; /* Reduced from 26px */
+            font-weight: 800;
+            margin-bottom: 18px; /* Reduced */
+            background: linear-gradient(to right, #00d2d3, #22d3ee);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            letter-spacing: -0.5px;
+            flex-shrink: 0;
+        }
+
+        /* Collapsible Sections */
+        .action-section {
+            margin-bottom: 10px; /* Reduced */
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            flex-shrink: 0; 
+        }
+
+        .action-header {
+            font-size: 10px; /* Reduced */
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 0;
+        }
+        .action-header:hover {
+            color: #fff;
+        }
+        .action-header i {
+            transition: transform 0.3s;
+        }
+        .action-header.collapsed i {
+            transform: rotate(-90deg);
+        }
+
+        .section-content {
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, opacity 0.3s ease-out, margin-bottom 0.3s;
+            max-height: 600px;
+            opacity: 1;
+            margin-bottom: 15px;
+        }
+        
+        .section-content.collapsed {
+            max-height: 0;
+            opacity: 0;
+            margin-bottom: 0;
+        }
+
+        /* Modern Inputs - Compact */
+        .sidebar-input, .sidebar-select {
+            background-color: #334155;
+            border: 1px solid #475569;
+            color: #f1f5f9;
+            padding: 7px 10px; /* Reduced padding */
+            border-radius: 6px;
+            font-size: 11px; /* Reduced font */
+            width: 100%;
+            transition: all 0.2s;
+        }
+        .sidebar-input:focus, .sidebar-select:focus {
+            outline: none;
+            border-color: #00d2d3;
+            background-color: #1e293b;
+            box-shadow: 0 0 0 2px rgba(0, 210, 211, 0.15);
+        }
+
+        /* Modern Buttons - Compact */
+        .action-btn {
+            width: 100%;
+            padding: 7px; /* Reduced padding */
+            margin-top: 8px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 11px; /* Reduced font */
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+        .btn-primary { background: linear-gradient(135deg, #00d2d3 0%, #0891b2 100%); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+        .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+        
+        .btn-secondary { background-color: rgba(239, 68, 68, 0.1); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.2); }
+        .btn-secondary:hover { background-color: rgba(239, 68, 68, 0.2); color: #fca5a5; }
+
+        .btn-danger { background-color: #ef4444; color: white; border: 1px solid #dc2626; }
+        .btn-danger:hover { background-color: #dc2626; }
+        
+        .btn-dark { background-color: #334155; color: #e2e8f0; border: 1px solid #475569; }
+        .btn-dark:hover { background-color: #475569; color: white; }
+        
+        .btn-outline { background: transparent; border: 1px dashed #64748b; color: #94a3b8; }
+        .btn-outline:hover { border-color: #00d2d3; color: #00d2d3; background: rgba(0, 210, 211, 0.05); }
+        
+        .btn-warning { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; }
+        .btn-warning:hover { opacity: 0.9; }
+
+        /* List Area */
+        .boundary-list-container {
+            flex: 1; 
+            overflow-y: auto;
+            margin-top: 5px;
+            padding-right: 4px;
+            min-height: 80px; 
+        }
+        .boundary-list-container::-webkit-scrollbar { width: 4px; }
+        .boundary-list-container::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+
+        /* Card Items - Compact */
+        .boundary-item {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 8px 10px; /* Compact padding */
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+        .boundary-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background-color: #00d2d3;
+            border-radius: 3px 0 0 3px;
+        }
+        .boundary-item:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            border-color: #475569;
+            background: #253346;
+        }
+        
+        /* New class for hidden items */
+        .boundary-item.item-hidden {
+            opacity: 0.5;
+            border-style: dashed;
+        }
+        .boundary-item.item-hidden::before {
+            background-color: #64748b;
+        }
+        
+        .boundary-info { flex: 1; cursor: pointer; }
+        .boundary-name { font-size: 12px; font-weight: 600; color: #f8fafc; }
+        .boundary-meta { font-size: 10px; color: #94a3b8; margin-top: 2px; }
+        .boundary-stats { 
+            font-size: 9px; 
+            color: #00d2d3; 
+            margin-top: 3px; 
+            background: rgba(0, 210, 211, 0.1); 
+            display: inline-block; 
+            padding: 1px 5px; 
+            border-radius: 3px; 
+            font-weight: 600;
+        }
+
+        .icon-btn {
+            width: 24px; /* Smaller */
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            color: #94a3b8;
+            transition: all 0.2s;
+            font-size: 11px;
+            margin-left: 2px;
+        }
+        .icon-btn:hover { background: rgba(255,255,255,0.1); color: white; }
+        .icon-btn.delete:hover { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+        .icon-btn.eye:hover { background: rgba(0, 210, 211, 0.1); color: #00d2d3; }
+        .icon-btn.eye.active { color: #00d2d3; }
+
+        /* Map Area */
+        .main-content {
+            flex: 1;
+            position: relative;
+            background: #0f172a;
+            transition: width 0.3s ease; 
+        }
+
+        #map { width: 100%; height: 100%; z-index: 1; }
+
+        /* LEAFLET ZOOM OVERRIDES 
+           Scale down the native leaflet controls to match the 75% theme 
+        */
+        .leaflet-control-container .leaflet-top, 
+        .leaflet-control-container .leaflet-bottom {
+            transform: scale(0.85); /* Shrink controls */
+        }
+        .leaflet-top.leaflet-left { transform-origin: top left; }
+        .leaflet-top.leaflet-right { transform-origin: top right; }
+        .leaflet-bottom.leaflet-left { transform-origin: bottom left; }
+        .leaflet-bottom.leaflet-right { transform-origin: bottom right; }
+
+        /* Floating Controls */
+        .coord-box {
+            position: absolute;
+            bottom: 16px;
+            right: 16px;
+            background: rgba(15, 23, 42, 0.8);
+            color: #e2e8f0;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 10px;
+            z-index: 1000;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.1);
+            font-family: 'Courier New', monospace;
+        }
+
+        /* Custom Edit Handles (Dots) */
+        .leaflet-editing-icon {
+            border-radius: 50% !important;
+            background-color: #00d2d3 !important;
+            border: 2px solid #fff !important;
+            width: 10px !important; /* Smaller dots */
+            height: 10px !important;
+            margin-left: -5px !important;
+            margin-top: -5px !important;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+            transition: transform 0.1s;
+        }
+        .leaflet-editing-icon:hover {
+            transform: scale(1.2);
+            background-color: #fff !important;
+            border-color: #00d2d3 !important;
+        }
+
+        /* --- UPDATED TOOLBAR SCALING LOGIC --- */
+        .leaflet-draw-toolbar {
+            /* Using 'zoom' creates a layout-aware scale, preventing overlaps */
+            zoom: var(--toolbar-scale);
+        }
+
+        /* Modal Glass - Compact */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(4px);
+            z-index: 4000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* --- ADJUSTABLE PROPERTY MODAL OVERRIDES --- */
+        #propModal {
+            background: transparent !important; /* Remove dark overlay */
+            backdrop-filter: none !important;
+            pointer-events: none; /* Allow clicking map behind */
+            display: none; /* Hidden by default */
+            /* Remove flex centering to allow absolute dragging */
+            align-items: unset; 
+            justify-content: unset;
+        }
+
+        #propModal .modal-content {
+            pointer-events: auto; /* Enable interaction with the box */
+            position: absolute; /* Allow moving */
+            top: 100px; /* Initial position */
+            left: calc(50% - 190px); /* Center horizontally (380px/2) */
+            margin: 0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+            border: 1px solid rgba(255,255,255,0.15);
+            /* Reset styling that might conflict with dragging */
+        }
+        
+        /* Higher Z-Index for Confirm Modal so it appears above Properties Modal */
+        #confirmModal { z-index: 5000; }
+        
+        .modal-content {
+            background: #1e293b;
+            padding: 20px; /* Reduced from 30px */
+            border-radius: 12px;
+            width: 380px; /* Reduced from 500px */
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: white;
+        }
+        
+        .modal-header { 
+            font-size: 15px; 
+            font-weight: 700; 
+            border-bottom: 1px solid #334155; 
+            padding-bottom: 10px; 
+            margin-bottom: 15px; 
+            color: #f1f5f9;
+            cursor: move; /* SHOW MOVE CURSOR */
+        }
+        
+        .form-label { color: #94a3b8; font-size: 10px; font-weight: 600; margin-bottom: 4px; display: block; text-transform: uppercase; letter-spacing: 0.5px; }
+        .form-input {
+            background: #0f172a; border: 1px solid #334155; color: white;
+            padding: 8px; /* Reduced */
+            border-radius: 6px; width: 100%; margin-bottom: 12px;
+            font-size: 12px;
+        }
+        .form-input:focus { border-color: #00d2d3; outline: none; }
+
+        .stats-badge {
+            background: rgba(0, 210, 211, 0.1);
+            border: 1px solid rgba(0, 210, 211, 0.2);
+            border-radius: 8px;
+            padding: 10px; /* Reduced */
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .stat-label { color: #22d3ee; font-size: 9px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
+        .stat-value { font-size: 15px; font-weight: 700; color: white; }
+
+        .user-profile {
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 15px; /* Reduced */
+            margin-top: auto;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        .avatar-circle {
+            width: 28px; height: 28px; /* Smaller */
+            background: linear-gradient(135deg, #6366f1, #a855f7);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 10px;
+        }
+
+        #statusToast {
+            font-size: 12px;
+            padding: 8px 16px;
+        }
+
+        /* Slider Styling */
+        input[type=range].custom-slider {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range].custom-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 14px;
+            width: 14px;
+            border-radius: 50%;
+            background: #00d2d3;
+            cursor: pointer;
+            margin-top: -5px; 
+            box-shadow: 0 0 5px rgba(0, 210, 211, 0.5);
+        }
+        input[type=range].custom-slider::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #334155;
+            border-radius: 2px;
+        }
+        
+        .slider-btn {
+            width: 24px;
+            height: 24px;
+            background: #334155;
+            color: #00d2d3;
+            border: 1px solid #475569;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        .slider-btn:hover {
+            background: #1e293b;
+            border-color: #00d2d3;
+        }
+        .slider-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* TOGGLE SWITCH STYLE */
+        .format-toggle-container {
+            display: flex;
+            background-color: #334155;
+            padding: 2px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+        .format-btn {
+            flex: 1;
+            text-align: center;
+            padding: 6px;
+            font-size: 10px;
+            font-weight: 700;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #94a3b8;
+        }
+        .format-btn.active {
+            background-color: #00d2d3;
+            color: #0f172a;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        .format-btn:hover:not(.active) {
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar" id="mainSidebar">
+        <div class="sidebar-resizer" id="sidebarResizer"></div>
+
+        <div class="sidebar-toggle" onclick="toggleSidebar()" title="Toggle Sidebar">
+            <i class="fa-solid fa-bars"></i>
+        </div>
+
+        <div class="logo">
+            <i class="fa-solid fa-satellite-dish"></i> KaMaL
+        </div>
+        
+        <div class="action-section">
+            <div class="action-header" onclick="toggleSection('navContent', this)">
+                <span>Navigation</span>
+                <i class="fa-solid fa-chevron-down text-xs"></i>
+            </div>
+            <div id="navContent" class="section-content">
+                <div class="flex gap-2 mb-2">
+                    <input type="text" id="searchCoords" placeholder="Search Place (e.g. Delhi, Farm No 4)" class="sidebar-input">
+                    <button id="searchBtn" class="action-btn btn-primary" style="margin-top:0; width: auto; padding: 0 10px;">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </button>
+                </div>
+                
+                <div class="flex gap-2">
+                      <button id="locateBtn" class="action-btn btn-dark" style="margin-top:0; flex: 1;">
+                        <i class="fa-solid fa-location-crosshairs"></i> Use My GPS
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="action-section">
+            <div class="action-header" onclick="toggleSection('toolContent', this)">
+                <span>Toolkit</span>
+                <i class="fa-solid fa-chevron-down text-xs"></i>
+            </div>
+            <div id="toolContent" class="section-content">
+                
+                <div class="mb-2">
+                    <label class="text-[11px] text-gray-400 font-bold mb-1 block">UNIT SYSTEM</label>
+                    <select id="unitSelect" class="sidebar-select" onchange="updateSidePanel()">
+                        <option value="sqm">Square Meters (m²)</option>
+                        <option value="hectare">Hectare (Ha)</option>
+                        <option value="acre">Acre (Ac)</option>
+                        <option value="sqft">Square Feet (ft²)</option>
+                        <option value="biswa" class="text-cyan-400 font-bold">Biswa (Azamgarh/Purvanchal)</option>
+                    </select>
+                </div>
+
+                <!-- NEW FILE FORMAT TOGGLE -->
+                <div class="mb-2">
+                    <label class="text-[11px] text-gray-400 font-bold mb-1 block">WORK MODE (FORMAT)</label>
+                    <div class="format-toggle-container">
+                        <div id="btnKml" class="format-btn active" onclick="setFormat('kml')">KML</div>
+                        <div id="btnGeo" class="format-btn" onclick="setFormat('geojson')">JSON</div>
+                        <div id="btnGpx" class="format-btn" onclick="setFormat('gpx')">GPX</div>
+                        <div id="btnCsv" class="format-btn" onclick="setFormat('csv')">CSV</div>
+                    </div>
+                    <input type="hidden" id="fileFormatMode" value="kml">
+                </div>
+
+                <input type="text" id="exportFileName" placeholder="Filename (e.g. My_Farm)" class="sidebar-input mb-2 mt-2">
+                
+                <div class="flex gap-2 mt-2">
+                    <button id="downloadBtn" class="action-btn btn-dark" style="margin-top:0;" title="Download Data">
+                        <i class="fa-solid fa-download"></i> Save All
+                    </button>
+                    <button onclick="document.getElementById('fileInput').click()" class="action-btn btn-outline" style="margin-top:0;" title="Upload File">
+                        <i class="fa-solid fa-upload"></i> Load
+                    </button>
+                    <button id="clearBtn" class="action-btn btn-secondary" style="margin-top:0; width: auto;" title="Clear All">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>
+                <!-- Updated accept attribute -->
+                <input type="file" id="fileInput" accept=".kml,.json,.geojson,.gpx,.csv" style="display: none;" onchange="handleFileUpload(this)">
+
+                <div class="mt-3 border-t border-slate-700 pt-2">
+                    <div class="text-[10px] font-bold text-gray-400 uppercase mb-2 tracking-wider">Map Controls</div>
+                    
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="text-[11px] text-gray-300 flex items-center gap-2">
+                            <i class="fa-solid fa-toolbox text-cyan-500"></i> Draw Tools
+                        </label>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="showToolbar" class="sr-only peer" checked onchange="updateToolbarSettings()">
+                            <div class="w-6 h-3 bg-slate-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-2 after:w-2 after:transition-all peer-checked:bg-cyan-500"></div>
+                        </label>
+                    </div>
+
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="text-[11px] text-gray-300 flex items-center gap-2">
+                            <i class="fa-solid fa-infinity text-cyan-500"></i> Continuous Mode
+                        </label>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="continuousMode" class="sr-only peer">
+                            <div class="w-6 h-3 bg-slate-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-2 after:w-2 after:transition-all peer-checked:bg-cyan-500"></div>
+                        </label>
+                    </div>
+
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="text-[11px] text-gray-300 flex items-center gap-2">
+                            <i class="fa-solid fa-lock text-cyan-500"></i> Lock Map
+                        </label>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="lockMap" class="sr-only peer" onchange="toggleMapLock()">
+                            <div class="w-6 h-3 bg-slate-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-2 after:w-2 after:transition-all peer-checked:bg-cyan-500"></div>
+                        </label>
+                    </div>
+
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="text-[11px] text-gray-300 flex items-center gap-2">
+                            <i class="fa-solid fa-arrows-up-down-left-right text-cyan-500"></i> Position
+                        </label>
+                        <select id="toolbarPos" class="bg-slate-700 text-white text-[10px] rounded border border-slate-600 p-1 focus:border-cyan-500 outline-none w-20" onchange="updateToolbarSettings()">
+                            <option value="topleft">Top Left</option>
+                            <option value="topright" selected>Top Right</option>
+                            <option value="bottomleft">Bottom Left</option>
+                            <option value="bottomright">Bottom Right</option>
+                        </select>
+                    </div>
+
+                    <div class="flex items-center justify-between">
+                        <label class="text-[11px] text-gray-300 flex items-center gap-2">
+                            <i class="fa-solid fa-expand text-cyan-500"></i> Size
+                        </label>
+                        <div class="flex items-center gap-2 w-20">
+                            <input type="range" id="toolbarSize" min="0.5" max="3.0" step="0.1" value="1.25" class="w-full h-1 bg-slate-600 rounded-lg appearance-none cursor-pointer accent-cyan-500" oninput="updateToolbarSettings()">
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="action-header flex justify-between items-center mt-2" style="cursor: default;">
+            <span>My Fields</span>
+            <span id="fieldCount" class="bg-slate-700 text-slate-300 text-[9px] px-1.5 py-0.5 rounded-full">0</span>
+        </div>
+        
+        <div class="boundary-list-container" id="boundaryList">
+            <div class="text-center text-gray-500 text-[10px] mt-8">
+                <i class="fa-regular fa-map mb-2 text-xl opacity-50"></i><br>
+                Start drawing on the map
+            </div>
+        </div>
+
+        <div class="user-profile">
+            <div class="avatar-circle">NK</div>
+            <div>
+                <div class="text-[11px] font-semibold">Nitesh Kumar</div>
+                <div class="text-[9px] text-green-400">● Online</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div id="statusToast" class="fixed top-16 left-1/2 -translate-x-1/2 bg-slate-800 text-white px-4 py-2 rounded-full shadow-lg z-[3000] opacity-0 transition-opacity pointer-events-none flex items-center gap-2 border border-slate-700 text-xs">
+            <i class="fa-solid fa-circle-info text-cyan-400"></i>
+            <span id="toastMsg">Notification</span>
+        </div>
+
+        <div id="map"></div>
+        
+        <div class="coord-box" id="coords">00.0000, 00.0000</div>
+    </div>
+
+    <!-- Modified Draggable Property Modal -->
+    <div id="propModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span><i class="fa-solid fa-grip-lines mr-2 text-gray-500"></i>Field Properties</span>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-white float-right"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Field Name</label>
+                <input type="text" id="kmlName" class="form-input" placeholder="e.g. North Plot">
+            </div>
+
+            <div id="geoControls" class="mb-3">
+                <!-- SMOOTHNESS CONTROL -->
+                <div class="mb-3">
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="form-label mb-0"><i class="fa-solid fa-bezier-curve text-cyan-400 mr-1"></i> Smoothness</label>
+                        <span id="smoothVal" class="text-[12px] text-cyan-400 font-bold bg-slate-800 px-2 py-0.5 rounded border border-cyan-500/30">0.0</span>
+                    </div>
+                    <div class="flex items-center gap-2 mt-1">
+                        <button class="slider-btn" onclick="changeSmoothness(-0.1)">-</button>
+                        <div class="flex-1">
+                             <input type="range" id="smoothSlider" min="0" max="10" value="0" step="0.1" class="custom-slider" oninput="updateGeometry()">
+                        </div>
+                        <button class="slider-btn" onclick="changeSmoothness(0.1)">+</button>
+                    </div>
+                    <div class="text-[9px] text-gray-500 mt-1 flex justify-between">
+                        <span>Straight</span>
+                        <span>Max Smooth</span>
+                    </div>
+                </div>
+
+                <!-- DENSITY CONTROL (NEW) -->
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="form-label mb-0"><i class="fa-solid fa-braille text-cyan-400 mr-1"></i> Point Density</label>
+                        <span id="densityVal" class="text-[12px] text-cyan-400 font-bold bg-slate-800 px-2 py-0.5 rounded border border-cyan-500/30">1</span>
+                    </div>
+                    <div class="flex items-center gap-2 mt-1">
+                        <button class="slider-btn" onclick="changeDensity(-1)">-</button>
+                        <div class="flex-1">
+                             <input type="range" id="densitySlider" min="1" max="10" value="1" step="1" class="custom-slider" oninput="updateGeometry()">
+                        </div>
+                        <button class="slider-btn" onclick="changeDensity(1)">+</button>
+                    </div>
+                    <div class="text-[9px] text-gray-500 mt-1 flex justify-between">
+                        <span>Low (Default)</span>
+                        <span>High (Densified)</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="modalStats" class="stats-badge">
+                <div class="stat-item">
+                    <div class="stat-label">Area</div>
+                    <div class="stat-value" id="statArea">0.00 <span class="text-[10px] font-normal opacity-70">m²</span></div>
+                </div>
+                <div class="stat-item border-l border-cyan-500/20 pl-4">
+                    <div class="stat-label">Perimeter</div>
+                    <div class="stat-value" id="statPerimeter">0 <span class="text-[10px] font-normal opacity-70">m</span></div>
+                </div>
+            </div>
+
+            <div class="mb-2">
+                <label class="form-label">Notes</label>
+                <textarea id="kmlDesc" class="form-input" rows="3" placeholder="Add crop details, soil type, etc..."></textarea>
+            </div>
+
+            <div class="flex justify-between items-center mt-4 pt-3 border-t border-slate-700">
+                <button onclick="triggerDeleteInModal()" class="action-btn btn-danger" style="margin:0; width:auto;" title="Delete this field">
+                    <i class="fa-solid fa-trash"></i> Delete
+                </button>
+                <div class="flex gap-2">
+                    <button onclick="closeModal()" class="action-btn btn-dark" style="margin:0; width:auto;">Cancel</button>
+                    <button onclick="saveProperties()" class="action-btn btn-primary" style="margin:0; width:auto;">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirmModal" class="modal-overlay">
+        <div class="modal-content" style="width: 300px; text-align: center;">
+            <div class="mb-3">
+                <div class="w-12 h-12 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <i class="fa-solid fa-triangle-exclamation text-2xl text-red-500"></i>
+                </div>
+                <h3 class="text-lg font-bold text-white mb-1">Delete Boundary?</h3>
+                <p class="text-gray-400 text-[10px]">Are you sure you want to delete this field? This action cannot be undone.</p>
+            </div>
+            
+            <div class="flex gap-2 mt-4">
+                <button onclick="closeConfirmModal()" class="action-btn btn-dark" style="margin-top:0;">Cancel</button>
+                <button onclick="confirmDeleteAction()" class="action-btn btn-danger" style="margin-top:0;">
+                    Yes, Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+    <script src="https://unpkg.com/tokml@0.4.0/tokml.js"></script>
+
+    <script>
+        // 1. Initialize Map with High Zoom Capabilities
+        // maxZoom 23 allows us to digitally zoom past the available tiles
+        var map = L.map('map', { 
+            zoomControl: false,
+            maxZoom: 23 // Increased from default 18
+        }).setView([20.5937, 78.9629], 5);
+        
+        L.control.zoom({ position: 'topright' }).addTo(map);
+
+        // 2. Layers
+        // IMPORTANT: maxNativeZoom tells Leaflet "Don't look for tiles after this level, just stretch the old ones"
+        
+        // OpenStreetMap
+        var osmUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+        var osmLayer = L.tileLayer(osmUrl, { 
+            attribution: '© OpenStreetMap contributors', 
+            maxZoom: 23, 
+            maxNativeZoom: 19 
+        });
+
+        // Google Hybrid
+        var googleHybridUrl = 'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}';
+        var googleHybridLayer = L.tileLayer(googleHybridUrl, {
+            maxZoom: 23,
+            maxNativeZoom: 20, // Google tiles usually exist up to 20 or 21
+            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+            attribution: 'Map data &copy; Google'
+        });
+
+        // Google Streets
+        var googleStreetsUrl = 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}';
+        var googleStreetsLayer = L.tileLayer(googleStreetsUrl, {
+            maxZoom: 23,
+            maxNativeZoom: 20,
+            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+            attribution: 'Map data &copy; Google'
+        });
+
+        // Google Terrain
+        var googleTerrainUrl = 'https://mt1.google.com/vt/lyrs=p&x={x}&y={y}&z={z}';
+        var googleTerrainLayer = L.tileLayer(googleTerrainUrl, {
+            maxZoom: 23,
+            maxNativeZoom: 20,
+            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+            attribution: 'Map data &copy; Google'
+        });
+
+        // Esri Satellite
+        var esriUrl = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+        var esriLayer = L.tileLayer(esriUrl, { 
+            attribution: 'Tiles © Esri', 
+            maxZoom: 23,
+            maxNativeZoom: 19
+        });
+
+        // Set default layer
+        googleHybridLayer.addTo(map);
+
+        // Add Layer Control
+        var baseMaps = {
+            "Google Hybrid": googleHybridLayer,
+            "Google Streets": googleStreetsLayer,
+            "Google Terrain": googleTerrainLayer,
+            "OpenStreetMap": osmLayer,
+            "Esri Satellite": esriLayer
+        };
+
+        L.control.layers(baseMaps, null, { position: 'topright' }).addTo(map);
+
+        // --- Marker Icon (Plus Sign) ---
+        var customMarkerIcon = L.divIcon({
+            className: 'custom-marker-icon',
+            html: '<i class="fa-solid fa-plus" style="color: #00d2d3; font-size: 24px; filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.4)); font-weight: 900;"></i>',
+            iconSize: [24, 24],
+            iconAnchor: [12, 12], // Centered
+            popupAnchor: [0, -12]
+        });
+
+        // 3. Drawing Features
+        var drawnItems = new L.FeatureGroup();
+        map.addLayer(drawnItems);
+        
+        // --- Dynamic Draw Control Logic ---
+        var drawControl;
+
+        function updateToolbarSettings() {
+            var show = document.getElementById('showToolbar').checked;
+            var pos = document.getElementById('toolbarPos').value;
+            var size = document.getElementById('toolbarSize').value; // Get size
+
+            // Update CSS Variable for Scale
+            document.documentElement.style.setProperty('--toolbar-scale', size);
+
+            // Remove existing control if it exists
+            if (drawControl) {
+                map.removeControl(drawControl);
+                drawControl = null;
+            }
+
+            if (show) {
+                drawControl = new L.Control.Draw({
+                    position: pos,
+                    draw: {
+                        // --- ENABLED ALL TOOLS ---
+                        polyline: { shapeOptions: { color: '#00d2d3', weight: 3 } }, 
+                        marker: { icon: customMarkerIcon },
+                        circle: {
+                            shapeOptions: { color: '#00d2d3', weight: 3, opacity: 1, fillOpacity: 0.1 }
+                        },
+                        circlemarker: { shapeOptions: { color: '#00d2d3', opacity: 1, fillOpacity: 0.5 } },
+                        polygon: {
+                            allowIntersection: false, showArea: true,
+                            shapeOptions: { color: '#00d2d3', weight: 3, opacity: 1, fillOpacity: 0.1 }
+                        },
+                        rectangle: {
+                            shapeOptions: { color: '#00d2d3', weight: 3, opacity: 1, fillOpacity: 0.1 }
+                        }
+                    },
+                    edit: { featureGroup: drawnItems, remove: true }
+                });
+                map.addControl(drawControl);
+            }
+        }
+        
+        // Initialize Toolbar
+        updateToolbarSettings();
+
+        // 4. State Management
+        var currentLayer = null;
+        var layerToDelete = null; 
+        var layerCounter = 1;
+        
+        // --- NEW: Store original shape for smoothing ---
+        var tempOriginalGeoJSON = null; 
+
+        // --- Section Toggle Logic ---
+        function toggleSection(contentId, headerEl) {
+            var content = document.getElementById(contentId);
+            content.classList.toggle('collapsed');
+            headerEl.classList.toggle('collapsed');
+        }
+
+        // --- RESIZABLE SIDEBAR LOGIC ---
+        const sidebar = document.getElementById('mainSidebar');
+        const resizer = document.getElementById('sidebarResizer');
+        
+        let isResizing = false;
+
+        resizer.addEventListener('mousedown', (e) => {
+            isResizing = true;
+            resizer.classList.add('resizing');
+            document.body.style.cursor = 'col-resize';
+            sidebar.style.transition = 'none'; 
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isResizing) return;
+            let newWidth = e.clientX;
+            if (newWidth < 220) newWidth = 220;
+            if (newWidth > window.innerWidth * 0.8) newWidth = window.innerWidth * 0.8;
+            document.documentElement.style.setProperty('--sidebar-width', newWidth + 'px');
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isResizing) {
+                isResizing = false;
+                resizer.classList.remove('resizing');
+                document.body.style.cursor = 'default';
+                sidebar.style.transition = 'margin-left 0.3s ease'; 
+                map.invalidateSize();
+            }
+        });
+
+        // --- Sidebar Toggle Logic ---
+        function toggleSidebar() {
+            var sidebar = document.getElementById('mainSidebar');
+            sidebar.classList.toggle('collapsed');
+            setTimeout(function() {
+                map.invalidateSize();
+            }, 350); 
+        }
+
+        // --- AUTO-SAVE LOGIC ---
+        function saveData() {
+            var data = drawnItems.toGeoJSON();
+            localStorage.setItem('kamal_boundaries', JSON.stringify(data));
+            localStorage.setItem('kamal_counter', layerCounter);
+        }
+
+        function loadData() {
+            var savedData = localStorage.getItem('kamal_boundaries');
+            var savedCounter = localStorage.getItem('kamal_counter');
+            
+            if (savedCounter) layerCounter = parseInt(savedCounter);
+
+            if (savedData) {
+                var geojson = JSON.parse(savedData);
+                L.geoJSON(geojson, {
+                    onEachFeature: function(feature, layer) {
+                        layer.feature = layer.feature || feature;
+                        
+                        // Default visible property if missing
+                        if (typeof layer.feature.properties.visible === 'undefined') {
+                            layer.feature.properties.visible = true;
+                        }
+
+                        if (feature.geometry.type !== 'Point') {
+                            if(layer.setStyle) layer.setStyle({ color: '#00d2d3', weight: 3, opacity: 1, fillOpacity: 0.1 });
+                        } else {
+                            layer.setIcon(customMarkerIcon);
+                        }
+                        
+                        // Apply hidden state if saved as false
+                        if(layer.feature.properties.visible === false) {
+                            applyVisibilityState(layer, false);
+                        }
+
+                        layer.on('click', function() { openModal(layer); });
+                        
+                        var tooltipOffset = (feature.geometry.type === 'Point') ? [0, -12] : [0, 0];
+                        if(feature.properties && feature.properties.name && layer.feature.properties.visible !== false) {
+                            layer.bindTooltip(feature.properties.name, { direction: 'top', offset: tooltipOffset });
+                        }
+
+                        drawnItems.addLayer(layer);
+                    }
+                });
+                updateSidePanel();
+            }
+        }
+
+        // Helper functions
+        function createCirclePolygon(circle) {
+            var center = circle.getLatLng();
+            var radius = circle.getRadius();
+            var points = [];
+            for (var i = 0; i < 360; i += 6) { 
+                var radian = i * (Math.PI / 180);
+                var latOffset = (radius * Math.cos(radian)) / 111111;
+                var lngOffset = (radius * Math.sin(radian)) / (111111 * Math.cos(center.lat * (Math.PI / 180)));
+                points.push([center.lat + latOffset, center.lng + lngOffset]);
+            }
+            return L.polygon(points, circle.options);
+        }
+        
+        // --- CORE UNIT CONVERSION LOGIC ---
+        function convertArea(sqMeters) {
+            const unit = document.getElementById('unitSelect').value;
+            const sqFeet = sqMeters * 10.7639; // Base Conversion
+
+            switch(unit) {
+                case 'hectare':
+                    return { val: (sqMeters / 10000).toFixed(4), unit: 'Ha' };
+                case 'acre':
+                    return { val: (sqMeters * 0.000247105).toFixed(4), unit: 'Ac' };
+                case 'sqft':
+                    return { val: sqFeet.toFixed(2), unit: 'ft²' };
+                case 'biswa':
+                    // RULE: Area in Biswa = Area in SqFt / 1220
+                    var biswaVal = sqFeet / 1220;
+                    return { val: biswaVal.toFixed(2), unit: 'Biswa' };
+                default: // 'sqm'
+                    return { val: sqMeters.toFixed(2), unit: 'm²' };
+            }
+        }
+
+        function calculateStats(layer) {
+            try {
+                if(layer instanceof L.Marker) return { area: 0, perimeter: 0, isPoint: true };
+                var geojson = layer.toGeoJSON();
+                var areaSqMeters = turf.area(geojson);
+                var lengthKm = turf.length(geojson, {units: 'kilometers'});
+                var perimeterMeters = (lengthKm * 1000).toFixed(2);
+                
+                // Get converted Area
+                var converted = convertArea(areaSqMeters);
+
+                return { 
+                    areaDisplay: converted.val, 
+                    unitDisplay: converted.unit,
+                    perimeterMeters: perimeterMeters, 
+                    isPoint: false 
+                };
+            } catch(e) {
+                return { areaDisplay: 0, unitDisplay: '', perimeterMeters: 0, isPoint: true };
+            }
+        }
+
+        function updateSidePanel() {
+            var listContainer = document.getElementById('boundaryList');
+            var countSpan = document.getElementById('fieldCount');
+            listContainer.innerHTML = '';
+            var layers = drawnItems.getLayers();
+            countSpan.textContent = layers.length;
+
+            if(layers.length === 0) {
+                listContainer.innerHTML = '<div class="text-center text-gray-500 text-[10px] mt-8"><i class="fa-regular fa-map mb-2 text-xl opacity-50"></i><br>Start drawing on the map</div>';
+                return;
+            }
+
+            layers.forEach(function(layer) {
+                var props = layer.feature.properties;
+                var layerId = L.stamp(layer);
+                var stats = calculateStats(layer);
+                var isVisible = (props.visible !== false); // Default true
+                
+                var statsHtml = !stats.isPoint ? 
+                    `<div class="boundary-stats">${stats.areaDisplay} ${stats.unitDisplay} | ${stats.perimeterMeters} m</div>` : 
+                    `<div class="boundary-stats">Marker</div>`;
+
+                var eyeIcon = isVisible ? 'fa-eye' : 'fa-eye-slash';
+                var itemClass = isVisible ? 'boundary-item' : 'boundary-item item-hidden';
+                var activeClass = isVisible ? 'active' : '';
+
+                var div = document.createElement('div');
+                div.className = itemClass;
+                div.innerHTML = `
+                    <div class="boundary-info" onclick="zoomToLayer(${layerId})">
+                        <div class="boundary-name">${props.name}</div>
+                        <div class="boundary-meta">${props.description ? props.description.substring(0, 15) + '...' : 'No notes'}</div>
+                        ${statsHtml}
+                    </div>
+                    <div class="boundary-actions flex">
+                         <button class="icon-btn eye ${activeClass}" onclick="toggleVisibility(${layerId})" title="Toggle Visibility"><i class="fa-solid ${eyeIcon}"></i></button>
+                        <button class="icon-btn" onclick="openModalById(${layerId})" title="Edit"><i class="fa-solid fa-pen"></i></button>
+                        <button class="icon-btn" onclick="downloadSingleLayer(${layerId})" title="Download Single File"><i class="fa-solid fa-file-arrow-down"></i></button>
+                        <button class="icon-btn delete" onclick="openDeleteConfirm(${layerId})" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                `;
+                
+                if(isVisible) {
+                    div.addEventListener('mouseenter', function() { layer.setStyle({ weight: 5, fillOpacity: 0.3 }); });
+                    div.addEventListener('mouseleave', function() { layer.setStyle({ weight: 3, fillOpacity: 0.1 }); });
+                }
+                
+                listContainer.appendChild(div);
+            });
+            
+            // Also update modal stats if open
+            if(document.getElementById('propModal').style.display === 'block' && currentLayer) {
+                var stats = calculateStats(currentLayer);
+                if(!stats.isPoint) {
+                    document.getElementById('statArea').innerHTML = stats.areaDisplay + ' <span class="text-[10px] font-normal opacity-70">' + stats.unitDisplay + '</span>';
+                    document.getElementById('statPerimeter').innerHTML = stats.perimeterMeters + ' <span class="text-[10px] font-normal opacity-70">m</span>';
+                }
+            }
+        }
+
+        // --- VISIBILITY TOGGLE LOGIC ---
+        window.toggleVisibility = function(id) {
+            var layer = drawnItems.getLayer(id);
+            if(!layer) return;
+
+            var isCurrentlyVisible = (layer.feature.properties.visible !== false);
+            var newState = !isCurrentlyVisible;
+
+            // Update property
+            layer.feature.properties.visible = newState;
+
+            // Apply visual changes
+            applyVisibilityState(layer, newState);
+
+            // Save and update UI
+            saveData();
+            updateSidePanel();
+            showToast(newState ? "Field Visible" : "Field Hidden");
+        }
+
+        function applyVisibilityState(layer, isVisible) {
+            if(isVisible) {
+                // Show
+                if (layer instanceof L.Marker) {
+                    layer.setOpacity(1);
+                    layer.setZIndexOffset(0);
+                } else {
+                    layer.setStyle({ opacity: 1, fillOpacity: 0.1, stroke: true, interactive: true });
+                }
+                
+                if (layer.feature.properties.name) {
+                    layer.bindTooltip(layer.feature.properties.name, { 
+                        direction: 'top', 
+                        offset: (layer instanceof L.Marker) ? [0, -12] : [0, 0] 
+                    });
+                }
+            } else {
+                // Hide
+                if (layer instanceof L.Marker) {
+                    layer.setOpacity(0);
+                    layer.setZIndexOffset(-1000); // Send to back
+                } else {
+                    layer.setStyle({ opacity: 0, fillOpacity: 0, stroke: false, interactive: false });
+                }
+                layer.unbindTooltip();
+                layer.closePopup();
+            }
+        }
+
+        // --- FILE FORMAT TOGGLE LOGIC ---
+        window.setFormat = function(fmt) {
+            document.getElementById('fileFormatMode').value = fmt;
+            
+            // Toggle Buttons UI
+            var btns = ['btnKml', 'btnGeo', 'btnGpx', 'btnCsv'];
+            btns.forEach(btnId => {
+                var btn = document.getElementById(btnId);
+                // Simple logic: remove active from all, add to matched
+                // We use a mapping here
+                var targetMode = '';
+                if(btnId === 'btnKml') targetMode = 'kml';
+                if(btnId === 'btnGeo') targetMode = 'geojson';
+                if(btnId === 'btnGpx') targetMode = 'gpx';
+                if(btnId === 'btnCsv') targetMode = 'csv';
+                
+                if(targetMode === fmt) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+            
+            showToast("Mode Switched: " + fmt.toUpperCase());
+        };
+
+        // KML/GeoJSON/GPX/CSV Upload
+        function handleFileUpload(input) {
+            var file = input.files[0];
+            if (!file) return;
+            
+            var fileName = file.name.toLowerCase();
+            var reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    var fileContent = e.target.result;
+                    var geojson;
+
+                    // 1. GPX
+                    if (fileName.endsWith('.gpx')) {
+                        var parser = new DOMParser();
+                        var gpxDom = parser.parseFromString(fileContent, 'text/xml');
+                        geojson = toGeoJSON.gpx(gpxDom);
+                    } 
+                    // 2. KML
+                    else if (fileName.endsWith('.kml')) {
+                        var parser = new DOMParser();
+                        var kmlDom = parser.parseFromString(fileContent, 'text/xml');
+                        geojson = toGeoJSON.kml(kmlDom);
+                    } 
+                    // 3. CSV
+                    else if (fileName.endsWith('.csv')) {
+                        geojson = csvToGeoJSON(fileContent);
+                    }
+                    // 4. JSON / GeoJSON
+                    else if (fileName.endsWith('.json') || fileName.endsWith('.geojson')) {
+                        geojson = JSON.parse(fileContent);
+                    } 
+                    // Fallback
+                    else {
+                        try {
+                            geojson = JSON.parse(fileContent);
+                        } catch(err) {
+                            var parser = new DOMParser();
+                            // Try KML/GPX detection blindly
+                            if(fileContent.includes('<gpx')) {
+                                geojson = toGeoJSON.gpx(parser.parseFromString(fileContent, 'text/xml'));
+                            } else {
+                                geojson = toGeoJSON.kml(parser.parseFromString(fileContent, 'text/xml'));
+                            }
+                        }
+                    }
+
+                    if (!geojson || !geojson.features || geojson.features.length === 0) { 
+                        if(geojson && geojson.type === 'Feature') {
+                            geojson = { type: "FeatureCollection", features: [geojson] };
+                        } else {
+                            showToast("⚠️ No valid features found"); 
+                            return; 
+                        }
+                    }
+
+                    L.geoJSON(geojson, {
+                        onEachFeature: function(feature, layer) {
+                            layer.feature = layer.feature || {};
+                            layer.feature.type = "Feature";
+                            layer.feature.properties = feature.properties || {};
+                            layer.feature.properties.visible = true; 
+                            
+                            if (!layer.feature.properties.name) layer.feature.properties.name = "Imported " + layerCounter++;
+                            if (!layer.feature.properties.description) layer.feature.properties.description = "Imported File";
+
+                            if (layer.setStyle) layer.setStyle({ color: '#00d2d3', weight: 3, opacity: 1, fillOpacity: 0.1 });
+                            
+                            // SAVE ORIGINAL GEOMETRY
+                            layer.feature.properties.originalGeometry = JSON.parse(JSON.stringify(feature));
+
+                            layer.on('click', function() { openModal(layer); });
+                            var tooltipOffset = (feature.geometry.type === 'Point') ? [0, -12] : [0, 0];
+                            layer.bindTooltip(layer.feature.properties.name, { direction: 'top', offset: tooltipOffset });
+                            drawnItems.addLayer(layer);
+                        }
+                    });
+
+                    if (drawnItems.getBounds().isValid()) map.fitBounds(drawnItems.getBounds());
+                    updateSidePanel();
+                    saveData(); 
+                    showToast("✅ File Imported Successfully");
+                } catch (error) { 
+                    console.error(error); 
+                    showToast("❌ Error parsing file"); 
+                }
+                input.value = '';
+            };
+            reader.readAsText(file);
+        }
+        
+        // --- CSV PARSER (Simple Lat/Lon detection) ---
+        function csvToGeoJSON(csvText) {
+            const lines = csvText.split(/\r\n|\n/);
+            // Look for headers in first line
+            const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/"/g, ''));
+            
+            // Find lat/lon columns
+            const latIdx = headers.findIndex(h => h.includes('lat') || h === 'y');
+            const lonIdx = headers.findIndex(h => h.includes('lon') || h.includes('lng') || h === 'x');
+            const nameIdx = headers.findIndex(h => h.includes('name') || h.includes('label'));
+            
+            if (latIdx === -1 || lonIdx === -1) throw new Error("CSV must have 'latitude' and 'longitude' columns");
+
+            const features = [];
+            for(let i=1; i<lines.length; i++) {
+                if(!lines[i].trim()) continue;
+                const row = lines[i].split(','); 
+                
+                const lat = parseFloat(row[latIdx]);
+                const lon = parseFloat(row[lonIdx]);
+                const name = (nameIdx > -1) ? row[nameIdx].replace(/"/g, '') : ("Point " + i);
+                
+                if(!isNaN(lat) && !isNaN(lon)) {
+                    features.push({
+                        type: "Feature",
+                        geometry: { type: "Point", coordinates: [lon, lat] },
+                        properties: { name: name, description: "Imported from CSV" }
+                    });
+                }
+            }
+            return { type: "FeatureCollection", features: features };
+        }
+
+        window.zoomToLayer = function(id) {
+            var layer = drawnItems.getLayer(id);
+            if(layer && layer.feature.properties.visible !== false) {
+                if(layer.getBounds) map.fitBounds(layer.getBounds(), { padding: [50, 50] });
+                else if(layer.getLatLng) { map.flyTo(layer.getLatLng(), 16); layer.openPopup(); }
+            } else if (layer) {
+                showToast("Cannot zoom to hidden field");
+            }
+        };
+
+        window.openModalById = function(id) {
+            var layer = drawnItems.getLayer(id);
+            if(layer) openModal(layer);
+        };
+
+        // --- SINGLE LAYER DOWNLOAD FUNCTION (Smart) ---
+        window.downloadSingleLayer = function(id) {
+            var layer = drawnItems.getLayer(id);
+            if(!layer) return;
+            
+            // Check Format Mode
+            var format = document.getElementById('fileFormatMode').value;
+            var geojson = layer.toGeoJSON();
+
+            // Preserve properties
+            if (layer.feature && layer.feature.properties) {
+                geojson.properties = JSON.parse(JSON.stringify(layer.feature.properties));
+                delete geojson.properties.visible; 
+            }
+            
+            // Generate Filename
+            var rawName = geojson.properties.name || "field";
+            var fileName = rawName.replace(/[^a-z0-9_\-]/gi, '_');
+
+            if (format === 'kml') {
+                var featureCollection = { "type": "FeatureCollection", "features": [geojson] };
+                var kml = tokml(featureCollection, { simplestyle: true, name: 'name', description: 'description' });
+                downloadBlob(kml, fileName + ".kml", "application/vnd.google-earth.kml+xml");
+            } else if (format === 'gpx') {
+                // Single GPX
+                 var gpxData = togpx({ "type": "FeatureCollection", "features": [geojson] });
+                 downloadBlob(gpxData, fileName + ".gpx", "application/gpx+xml");
+            } else if (format === 'csv') {
+                var csv = "name,description,wkt\n";
+                var wkt = toWKT(layer);
+                csv += `"${geojson.properties.name}","${geojson.properties.description}","${wkt}"`;
+                downloadBlob(csv, fileName + ".csv", "text/csv");
+            } else {
+                // GeoJSON
+                var jsonStr = JSON.stringify(geojson, null, 2);
+                downloadBlob(jsonStr, fileName + ".geojson", "application/geo+json");
+            }
+        };
+        
+        // Helper to trigger download
+        function downloadBlob(content, filename, mimeType) {
+            var blob = new Blob([content], {type: mimeType});
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            showToast("Downloaded " + filename);
+        }
+        
+        // Helper: Convert Layer to WKT (Well Known Text)
+        function toWKT(layer) {
+            var geo = layer.toGeoJSON().geometry;
+            if(geo.type === 'Point') return `POINT(${geo.coordinates[0]} ${geo.coordinates[1]})`;
+            if(geo.type === 'Polygon') {
+                var coords = geo.coordinates[0].map(p => `${p[0]} ${p[1]}`).join(', ');
+                return `POLYGON((${coords}))`;
+            }
+            if(geo.type === 'LineString') {
+                 var coords = geo.coordinates.map(p => `${p[0]} ${p[1]}`).join(', ');
+                 return `LINESTRING(${coords})`;
+            }
+            return "";
+        }
+
+        // UI Logic - OPEN MODAL
+        function openModal(layer) {
+            if(layer.feature.properties.visible === false) return; // Don't open if hidden
+
+            currentLayer = layer;
+            
+            // --- UPDATED: RETRIEVE OR INITIALIZE ORIGINAL GEOMETRY ---
+            // Check if we have a saved original geometry. If not, create it.
+            if (!layer.feature.properties.originalGeometry) {
+                layer.feature.properties.originalGeometry = JSON.parse(JSON.stringify(layer.toGeoJSON()));
+            }
+            
+            // Use the Saved Original as the baseline for all smoothing operations
+            tempOriginalGeoJSON = JSON.parse(JSON.stringify(layer.feature.properties.originalGeometry));
+
+            var props = currentLayer.feature.properties;
+            document.getElementById('kmlName').value = props.name || "";
+            document.getElementById('kmlDesc').value = props.description || "";
+            
+            // Reset Sliders
+            document.getElementById('smoothSlider').value = 0;
+            document.getElementById('smoothVal').innerText = "0.0";
+            
+            document.getElementById('densitySlider').value = 1;
+            document.getElementById('densityVal').innerText = "1";
+
+            var stats = calculateStats(layer);
+            var statsDiv = document.getElementById('modalStats');
+            var geoControls = document.getElementById('geoControls');
+
+            if(stats.isPoint) {
+                statsDiv.classList.add('hidden');
+                geoControls.classList.add('hidden'); // Hide sliders for points
+            } else {
+                statsDiv.classList.remove('hidden');
+                geoControls.classList.remove('hidden'); // Show sliders for polygons/lines
+                document.getElementById('statArea').innerHTML = stats.areaDisplay + ' <span class="text-[10px] font-normal opacity-70">' + stats.unitDisplay + '</span>';
+                document.getElementById('statPerimeter').innerHTML = stats.perimeterMeters + ' <span class="text-[10px] font-normal opacity-70">m</span>';
+            }
+            document.getElementById('propModal').style.display = 'block';
+            
+            // Re-initialize drag functionality each time (safe to call repeatedly)
+            makeDraggable(document.querySelector('#propModal .modal-content'));
+        }
+        
+        // --- NEW: DRAGGABLE LOGIC ---
+        function makeDraggable(elmnt) {
+            var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+            var header = elmnt.querySelector(".modal-header");
+            
+            if (header) {
+                // if present, the header is where you move the DIV from:
+                header.onmousedown = dragMouseDown;
+            } else {
+                // otherwise, move the DIV from anywhere inside the DIV:
+                elmnt.onmousedown = dragMouseDown;
+            }
+
+            function dragMouseDown(e) {
+                e = e || window.event;
+                e.preventDefault();
+                // get the mouse cursor position at startup:
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                document.onmouseup = closeDragElement;
+                // call a function whenever the cursor moves:
+                document.onmousemove = elementDrag;
+            }
+
+            function elementDrag(e) {
+                e = e || window.event;
+                e.preventDefault();
+                // calculate the new cursor position:
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                // set the element's new position:
+                elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+                elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+            }
+
+            function closeDragElement() {
+                // stop moving when mouse button is released:
+                document.onmouseup = null;
+                document.onmousemove = null;
+            }
+        }
+
+        // --- UPDATED: GEOMETRY CONTROLS (Smoothness + Density) ---
+        
+        window.changeSmoothness = function(delta) {
+            var slider = document.getElementById('smoothSlider');
+            var newVal = parseFloat(slider.value) + delta;
+            if(newVal < 0) newVal = 0;
+            if(newVal > 10) newVal = 10;
+            slider.value = newVal;
+            updateGeometry();
+        }
+        
+        window.changeDensity = function(delta) {
+            var slider = document.getElementById('densitySlider');
+            var newVal = parseInt(slider.value) + delta;
+            if(newVal < 1) newVal = 1;
+            if(newVal > 10) newVal = 10;
+            slider.value = newVal;
+            updateGeometry();
+        }
+
+        window.updateGeometry = function() {
+            if (!currentLayer || !tempOriginalGeoJSON) return;
+
+            var smoothVal = parseFloat(document.getElementById('smoothSlider').value);
+            var densityVal = parseInt(document.getElementById('densitySlider').value);
+            
+            document.getElementById('smoothVal').innerText = smoothVal.toFixed(1);
+            document.getElementById('densityVal').innerText = densityVal;
+
+            // Logic Split:
+            // 1. If Smoothness is 0: Densify the straight lines (add points linearly).
+            // 2. If Smoothness > 0: Use Bezier Spline, and map Density to Resolution.
+
+            if (smoothVal === 0) {
+                // --- STRAIGHT LINE DENSIFICATION ---
+                // For Density 1, we return original.
+                // For Density > 1, we subdivide segments.
+                // We'll treat densityVal as the number of segments to split each edge into.
+                
+                try {
+                    // IMPORTANT: We use the Original GeoJSON as the source, guaranteeing we can revert.
+                    var inputFeature = JSON.parse(JSON.stringify(tempOriginalGeoJSON)); 
+                    var densifiedCoords = [];
+                    
+                    if (inputFeature.geometry.type === 'Polygon') {
+                         var ring = inputFeature.geometry.coordinates[0]; // Outer ring
+                         var newRing = densifyCoords(ring, densityVal);
+                         // Convert to Leaflet LatLngs [Lat, Lng]
+                         var latlngs = L.GeoJSON.coordsToLatLngs([newRing], 1);
+                         currentLayer.setLatLngs(latlngs);
+                    } 
+                    else if (inputFeature.geometry.type === 'LineString') {
+                         var lineCoords = inputFeature.geometry.coordinates;
+                         var newLine = densifyCoords(lineCoords, densityVal);
+                         var latlngs = L.GeoJSON.coordsToLatLngs(newLine, 0);
+                         currentLayer.setLatLngs(latlngs);
+                    }
+                } catch(e) { console.error("Densify error", e); }
+                
+            } else {
+                // --- CURVED LINE (SPLINE) ---
+                // Map Density (1-10) to Resolution (Time in ms).
+                // High Density = Low time step (more points).
+                // Let's set a base range.
+                // Density 1 (Low) -> Resolution 20,000
+                // Density 10 (High) -> Resolution 2,000
+                var resolution = 22000 - (densityVal * 2000);
+                if (resolution < 1000) resolution = 1000;
+                
+                var sharpness = 1.0 - (smoothVal / 10.0);
+                
+                try {
+                    var inputFeature = tempOriginalGeoJSON;
+                    var smoothed = null;
+                    
+                    if (inputFeature.geometry.type === 'Polygon') {
+                         var line = turf.lineString(inputFeature.geometry.coordinates[0]);
+                         smoothed = turf.bezierSpline(line, {
+                             resolution: resolution, 
+                             sharpness: sharpness 
+                         });
+                         var latlngs = L.GeoJSON.coordsToLatLngs([smoothed.geometry.coordinates], 1);
+                         currentLayer.setLatLngs(latlngs);
+                    } 
+                    else if (inputFeature.geometry.type === 'LineString') {
+                         smoothed = turf.bezierSpline(inputFeature, {
+                             resolution: resolution,
+                             sharpness: sharpness
+                         });
+                         var latlngs = L.GeoJSON.coordsToLatLngs(smoothed.geometry.coordinates, 0);
+                         currentLayer.setLatLngs(latlngs);
+                    }
+                } catch(e) { console.log("Smoothing error: " + e); }
+            }
+
+            // Update stats live
+            var stats = calculateStats(currentLayer);
+            document.getElementById('statArea').innerHTML = stats.areaDisplay + ' <span class="text-[10px] font-normal opacity-70">' + stats.unitDisplay + '</span>';
+            document.getElementById('statPerimeter').innerHTML = stats.perimeterMeters + ' <span class="text-[10px] font-normal opacity-70">m</span>';
+        }
+        
+        // Helper function to densify coordinate array (Linear Interpolation)
+        function densifyCoords(coords, factor) {
+            if (factor <= 1) return coords;
+            var newCoords = [];
+            for (let i = 0; i < coords.length - 1; i++) {
+                 let p1 = coords[i];
+                 let p2 = coords[i+1];
+                 newCoords.push(p1);
+                 
+                 // Add intermediate points
+                 for (let j = 1; j < factor; j++) {
+                     let t = j / factor;
+                     let x = p1[0] + (p2[0] - p1[0]) * t;
+                     let y = p1[1] + (p2[1] - p1[1]) * t;
+                     newCoords.push([x, y]);
+                 }
+            }
+            newCoords.push(coords[coords.length-1]); // Add last point
+            return newCoords;
+        }
+
+        function closeModal() {
+            document.getElementById('propModal').style.display = 'none';
+        }
+
+        // --- Custom Delete Modal Logic ---
+        window.openDeleteConfirm = function(id) {
+            layerToDelete = drawnItems.getLayer(id);
+            document.getElementById('confirmModal').style.display = 'flex';
+        }
+
+        window.triggerDeleteInModal = function() {
+            if (currentLayer) {
+                layerToDelete = currentLayer;
+                document.getElementById('confirmModal').style.display = 'flex';
+            }
+        }
+
+        window.closeConfirmModal = function() {
+            document.getElementById('confirmModal').style.display = 'none';
+            layerToDelete = null;
+        }
+
+        window.confirmDeleteAction = function() {
+            if (layerToDelete) {
+                drawnItems.removeLayer(layerToDelete);
+                updateSidePanel();
+                saveData();
+                showToast("Boundary Deleted");
+                
+                document.getElementById('confirmModal').style.display = 'none';
+                document.getElementById('propModal').style.display = 'none';
+                
+                layerToDelete = null;
+                currentLayer = null;
+            }
+        }
+
+        function saveProperties() {
+            if (currentLayer) {
+                var name = document.getElementById('kmlName').value;
+                var desc = document.getElementById('kmlDesc').value;
+                currentLayer.feature.properties.name = name;
+                currentLayer.feature.properties.description = desc;
+                
+                var isMarker = currentLayer instanceof L.Marker;
+                var offset = isMarker ? [0, -12] : [0, 0];
+                currentLayer.bindTooltip(name, { direction: 'top', offset: offset }).openTooltip();
+                
+                updateSidePanel(); 
+                saveData(); 
+                showToast("Properties Saved");
+                
+                document.getElementById('propModal').style.display = 'none';
+                currentLayer = null;
+                tempOriginalGeoJSON = null; // Clear temp
+            }
+        }
+
+        map.on('mousemove', function(e) {
+            document.getElementById('coords').innerHTML = "Lat: " + e.latlng.lat.toFixed(4) + ", Lng: " + e.latlng.lng.toFixed(4);
+        });
+
+        function showToast(message) {
+            var toast = document.getElementById('statusToast');
+            var msgSpan = document.getElementById('toastMsg');
+            msgSpan.textContent = message;
+            toast.classList.remove('opacity-0');
+            setTimeout(() => { toast.classList.add('opacity-0'); }, 3000);
+        }
+
+        // --- NEW MAP LOCK FEATURE ---
+        function toggleMapLock() {
+            var isLocked = document.getElementById('lockMap').checked;
+            if (isLocked) {
+                map.dragging.disable();
+                map.touchZoom.disable();
+                map.doubleClickZoom.disable();
+                map.scrollWheelZoom.disable();
+                map.boxZoom.disable();
+                map.keyboard.disable();
+                if (map.tap) map.tap.disable();
+                document.getElementById('map').style.cursor = 'default';
+                showToast("Map Locked");
+            } else {
+                map.dragging.enable();
+                map.touchZoom.enable();
+                map.doubleClickZoom.enable();
+                map.scrollWheelZoom.enable();
+                map.boxZoom.enable();
+                map.keyboard.enable();
+                if (map.tap) map.tap.enable();
+                document.getElementById('map').style.cursor = 'grab';
+                showToast("Map Unlocked");
+            }
+        }
+
+        // --- Search Logic ---
+        document.getElementById('searchBtn').addEventListener('click', function() {
+            const inputVal = document.getElementById('searchCoords').value.trim();
+            if(!inputVal) return;
+
+            const coordRegex = /^-?\d+(\.\d+)?\s*[,\s]\s*-?\d+(\.\d+)?$/;
+            
+            if (coordRegex.test(inputVal)) {
+                // Handle as coordinates
+                const parts = inputVal.split(/[\s,]+/);
+                const lat = parseFloat(parts[0]);
+                const lng = parseFloat(parts[1]);
+                
+                if (isNaN(lat) || isNaN(lng) || lat < -90 || lat > 90) { showToast("Invalid coordinates"); return; }
+
+                map.flyTo([lat, lng], 16, { duration: 1.5 });
+                createSearchResultMarker(lat, lng, "Search Result");
+                showToast("Moved to coordinates");
+            } else {
+                // Handle as Place Name (Nominatim API)
+                var btn = this;
+                var originalIcon = btn.innerHTML;
+                btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i>';
+                btn.disabled = true;
+
+                const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(inputVal)}&limit=1`;
+                
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        btn.innerHTML = originalIcon;
+                        btn.disabled = false;
+
+                        if (data && data.length > 0) {
+                            const lat = parseFloat(data[0].lat);
+                            const lon = parseFloat(data[0].lon);
+                            const displayName = data[0].display_name.split(',')[0]; 
+
+                            map.flyTo([lat, lon], 16, { duration: 1.5 });
+                            createSearchResultMarker(lat, lon, displayName);
+                            showToast("Found: " + displayName);
+                        } else {
+                            showToast("❌ Location not found");
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        btn.innerHTML = originalIcon;
+                        btn.disabled = false;
+                        showToast("❌ Network error");
+                    });
+            }
+        });
+        
+        document.getElementById('searchCoords').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                document.getElementById('searchBtn').click();
+            }
+        });
+
+        function createSearchResultMarker(lat, lng, title) {
+            L.marker([lat, lng], { icon: customMarkerIcon }).addTo(map)
+                .bindPopup(`<b>${title}</b><br>${lat.toFixed(4)}, ${lng.toFixed(4)}`)
+                .openPopup();
+        }
+
+        // --- GPS Logic ---
+        document.getElementById('locateBtn').addEventListener('click', function() {
+            if (!navigator.geolocation) { showToast("Geolocation not supported"); return; }
+
+            var btn = this;
+            var originalContent = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Finding...';
+            btn.classList.add('opacity-70');
+
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    var lat = position.coords.latitude;
+                    var lng = position.coords.longitude;
+                    var acc = position.coords.accuracy;
+
+                    map.flyTo([lat, lng], 18);
+                    
+                    L.marker([lat, lng], { icon: customMarkerIcon }).addTo(map)
+                        .bindPopup(`<b>You Are Here</b><br>Accuracy: ${Math.round(acc)}m`)
+                        .openPopup();
+
+                    L.circle([lat, lng], { radius: acc, color: '#00d2d3', fillOpacity: 0.1, weight: 1 }).addTo(map);
+                        
+                    showToast(`Location Found`);
+                    btn.innerHTML = originalContent;
+                    btn.classList.remove('opacity-70');
+                },
+                function(error) {
+                    showToast("GPS Error: " + error.message);
+                    btn.innerHTML = originalContent;
+                    btn.classList.remove('opacity-70');
+                },
+                { enableHighAccuracy: false, timeout: 10000, maximumAge: 0 }
+            );
+        });
+
+        // Helper to restart a draw tool
+        function startDrawTool(type) {
+            // We use the same options defined in drawControl
+            var options = drawControl.options.draw;
+            
+            if(type === 'polygon') new L.Draw.Polygon(map, options.polygon).enable();
+            else if(type === 'rectangle') new L.Draw.Rectangle(map, options.rectangle).enable();
+            else if(type === 'circle') new L.Draw.Circle(map, options.circle).enable();
+            else if(type === 'marker') new L.Draw.Marker(map, options.marker).enable();
+            else if(type === 'polyline') new L.Draw.Polyline(map, options.polyline).enable();
+            else if(type === 'circlemarker') new L.Draw.CircleMarker(map, options.circlemarker).enable();
+        }
+
+        // Draw Events
+        map.on(L.Draw.Event.CREATED, function (e) {
+            var layer = e.layer;
+            var type = e.layerType;
+
+            if (type === 'circle') {
+                layer = createCirclePolygon(layer);
+                type = 'polygon';
+            }
+
+            layer.feature = layer.feature || {};
+            layer.feature.type = "Feature";
+            
+            var geojson = layer.toGeoJSON();
+            var typeName = (type === 'marker') ? "Point " : "Field ";
+            var description = "";
+
+            // --- Updated Logic to Calculate Geometry Details in m2 ---
+            if (type === 'marker') {
+                 var latlng = layer.getLatLng();
+                 description = `Centroid is ${latlng.lat.toFixed(5)}, ${latlng.lng.toFixed(5)}`;
+            } else {
+                 try {
+                      var areaSqMeters = turf.area(geojson).toFixed(2);
+                      var lengthKm = turf.length(geojson, {units: 'kilometers'});
+                      var perimeterM = (lengthKm * 1000).toFixed(2);
+                      
+                      // Centroid
+                      var center = turf.centroid(geojson);
+                      var cLat = center.geometry.coordinates[1].toFixed(5);
+                      var cLng = center.geometry.coordinates[0].toFixed(5);
+
+                      description = `Area is ${areaSqMeters} m², Perimeter is ${perimeterM} m, Centroid is ${cLat}, ${cLng}`;
+                 } catch (err) {
+                      description = "Created on " + new Date().toLocaleDateString();
+                 }
+            }
+
+            layer.feature.properties = {
+                name: typeName + layerCounter,
+                description: description,
+                visible: true // Default to visible
+            };
+            
+            // --- SAVE ORIGINAL GEOMETRY HERE ---
+            // This is the "Master Copy" of the jagged line that we can always revert to.
+            layer.feature.properties.originalGeometry = JSON.parse(JSON.stringify(geojson));
+            
+            layerCounter++;
+
+            layer.on('click', function() { openModal(layer); });
+            var tooltipOffset = (type === 'marker') ? [0, -12] : [0, 0];
+            layer.bindTooltip(layer.feature.properties.name, { direction: 'top', offset: tooltipOffset });
+
+            drawnItems.addLayer(layer);
+            updateSidePanel(); 
+            saveData(); 
+            showToast("Added to list");
+
+            // --- Check Continuous Mode ---
+            if (document.getElementById('continuousMode').checked) {
+                setTimeout(function() {
+                    startDrawTool(e.layerType);
+                }, 100);
+            }
+        });
+
+        map.on(L.Draw.Event.DELETED, function (e) {
+            updateSidePanel();
+            saveData();
+            showToast("Boundary removed");
+        });
+
+        map.on(L.Draw.Event.EDITED, function (e) {
+            // Update the "Original Geometry" if the user manually moves points on the map
+            // This ensures subsequent smoothing works on the new layout
+            e.layers.eachLayer(function(layer) {
+                layer.feature.properties.originalGeometry = JSON.parse(JSON.stringify(layer.toGeoJSON()));
+            });
+            
+            updateSidePanel();
+            saveData();
+            showToast("Changes Saved");
+        });
+
+        // Download Logic (SAVE ALL)
+        document.getElementById('downloadBtn').addEventListener('click', function() {
+            var features = [];
+            drawnItems.eachLayer(function(layer) {
+                var geojson = layer.toGeoJSON();
+                if (layer.feature && layer.feature.properties) {
+                    geojson.properties = JSON.parse(JSON.stringify(layer.feature.properties));
+                    delete geojson.properties.visible; // Remove internal flag
+                }
+                
+                if (geojson.geometry.type === 'Polygon' || geojson.geometry.type === 'MultiPolygon') {
+                    geojson.properties['stroke'] = '#ff0000';
+                    geojson.properties['stroke-width'] = 2;
+                    geojson.properties['stroke-opacity'] = 1;
+                    geojson.properties['fill'] = '#ffffff';
+                    geojson.properties['fill-opacity'] = 0;
+                }
+                features.push(geojson);
+            });
+
+            if (features.length === 0) { showToast("List is empty"); return; }
+
+            var fileNameInput = document.getElementById('exportFileName').value.trim();
+            var fileName = fileNameInput || "My_Boundaries"; 
+            fileName = fileName.replace(/[^a-z0-9_\-]/gi, '_');
+
+            var format = document.getElementById('fileFormatMode').value;
+            
+            // --- EXPORT SWITCH ---
+            if (format === 'kml') {
+                var data = { "type": "FeatureCollection", "features": features };
+                var kml = tokml(data, { simplestyle: true, name: 'name', description: 'description' });
+                downloadBlob(kml, fileName + ".kml", "application/vnd.google-earth.kml+xml");
+            } else if (format === 'gpx') {
+                // EXPORT GPX
+                var data = { "type": "FeatureCollection", "features": features };
+                var gpxData = togpx(data);
+                downloadBlob(gpxData, fileName + ".gpx", "application/gpx+xml");
+            } else if (format === 'csv') {
+                // EXPORT CSV
+                var csvContent = "name,description,wkt\n";
+                features.forEach(f => {
+                    var wkt = ""; 
+                    // Simple WKT construction
+                    var geo = f.geometry;
+                    if(geo.type === 'Point') wkt = `POINT(${geo.coordinates[0]} ${geo.coordinates[1]})`;
+                    else if(geo.type === 'Polygon') {
+                         var coords = geo.coordinates[0].map(p => `${p[0]} ${p[1]}`).join(', ');
+                         wkt = `POLYGON((${coords}))`;
+                    } else if(geo.type === 'LineString') {
+                         var coords = geo.coordinates.map(p => `${p[0]} ${p[1]}`).join(', ');
+                         wkt = `LINESTRING(${coords})`;
+                    }
+                    csvContent += `"${f.properties.name}","${f.properties.description}","${wkt}"\n`;
+                });
+                downloadBlob(csvContent, fileName + ".csv", "text/csv");
+            } else {
+                // EXPORT GEOJSON
+                var data = { "type": "FeatureCollection", "features": features };
+                var jsonStr = JSON.stringify(data, null, 2);
+                downloadBlob(jsonStr, fileName + ".geojson", "application/geo+json");
+            }
+        });
+
+        document.getElementById('clearBtn').addEventListener('click', function() {
+            if(Object.keys(drawnItems._layers).length === 0) return;
+            if(confirm("Clear all boundaries? This cannot be undone.")) {
+                drawnItems.clearLayers();
+                layerCounter = 1;
+                localStorage.removeItem('kamal_boundaries');
+                localStorage.removeItem('kamal_counter');
+                updateSidePanel();
+                showToast("All cleared");
+            }
+        });
+
+        loadData();
+    </script>
+</body>
+</html>
